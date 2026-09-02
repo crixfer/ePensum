@@ -2,6 +2,7 @@ import type { PensumSummary } from "@epensum/shared";
 import { Card, CardContent } from "@/components/ui/card";
 import { DonutStat } from "@/components/DonutStat";
 import { HonorBadge } from "@/components/HonorBadge";
+import unicaribeEmblem from "@/assets/unicaribe-emblem.png";
 
 export function SummaryPanel({ summary }: { summary: PensumSummary }) {
   return (
@@ -10,7 +11,10 @@ export function SummaryPanel({ summary }: { summary: PensumSummary }) {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             {summary.universityName && (
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {summary.universityId === "unicaribe" && (
+                  <img src={unicaribeEmblem} alt="" className="h-4 w-4" />
+                )}
                 {summary.universityName}
               </p>
             )}
