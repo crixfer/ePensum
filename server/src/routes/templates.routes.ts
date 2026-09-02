@@ -43,7 +43,9 @@ templatesRouter.get(
           totalCredits: subjects.reduce((sum, s) => sum + s.credits, 0),
           subjectCount: subjects.length,
           createdAt: t.createdAt.toISOString(),
-          canDelete: (t.createdById === req.userId || isAdmin) && t.userPensums.length === 0,
+          // Admins can remove any pensum from the list, in use or not; regular
+          // creators can only clean up their own unused ones.
+          canDelete: isAdmin || (t.createdById === req.userId && t.userPensums.length === 0),
         };
       }),
     );

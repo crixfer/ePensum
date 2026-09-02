@@ -179,10 +179,16 @@ export async function deletePensumTemplate(userId: string, templateId: string) {
     throw new HttpError(403, "Solo quien subió este pensum (o un administrador) puede eliminarlo.");
   }
 
-  const inUse = await prisma.userPensum.findFirst({ where: { templateId, active: true } });
-  if (inUse) {
+  const activeUse = await prisma.userPensum.findFirst({ where: { templateId, active: true } });
+  if (activeUse && !isAdmin) {
     throw new HttpError(409, "No se puede eliminar: hay estudiantes usando este pensum.");
   }
 
-  await prisma.pensumTemplate.delete({ where: { id: templateId } });
+  await prisma.$transaction(async (tx) => {
+    // Any student attached to this template (active or archived) references it by
+    // templateId, which would otherwise block the delete — drop those first. An admin
+    // forcing removal of a pensum still in active use also drops whoever was attached.
+    await tx.userPensum.deleteMany({ where: { templateId } });
+    await tx.pensumTemplate.delete({ where: { id: templateId } });
+  });
 }
