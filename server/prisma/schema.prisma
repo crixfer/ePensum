@@ -12,19 +12,23 @@ model User {
   email            String           @unique
   passwordHash     String
   name             String
+  matricula        String
+  universityId     String
   createdAt        DateTime         @default(now())
-  pensum           UserPensum?
+  pensums          UserPensum[]
   createdTemplates PensumTemplate[] @relation("TemplateAuthor")
 }
 
 model PensumTemplate {
-  id          String       @id @default(cuid())
-  careerName  String
-  createdById String
-  createdBy   User         @relation("TemplateAuthor", fields: [createdById], references: [id])
-  createdAt   DateTime     @default(now())
-  quarters    Quarter[]
-  userPensums UserPensum[]
+  id             String       @id @default(cuid())
+  universityId   String
+  universityName String?
+  careerName     String
+  createdById    String
+  createdBy      User         @relation("TemplateAuthor", fields: [createdById], references: [id])
+  createdAt      DateTime     @default(now())
+  quarters       Quarter[]
+  userPensums    UserPensum[]
 
   @@index([careerName])
 }

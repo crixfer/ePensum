@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search } from "lucide-react";
-import { useAttachTemplate, useTemplates } from "@/hooks/usePensum";
+import { Search, Trash2 } from "lucide-react";
+import { useAttachTemplate, useDeleteTemplate, useTemplates } from "@/hooks/usePensum";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,9 +10,11 @@ import { ApiError } from "@/lib/api";
 export function CareerTemplatePicker() {
   const { data: templates, isLoading } = useTemplates();
   const attach = useAttachTemplate();
+  const deleteTemplate = useDeleteTemplate();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
   const filtered = (templates ?? []).filter((t) =>
     t.careerName.toLowerCase().includes(query.toLowerCase()),
@@ -25,6 +27,17 @@ export function CareerTemplatePicker() {
       navigate("/");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "No se pudo seleccionar este pensum");
+    }
+  }
+
+  async function handleDelete(templateId: string) {
+    setError(null);
+    try {
+      await deleteTemplate.mutateAsync(templateId);
+      setConfirmingId(null);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "No se pudo eliminar este pensum");
+      setConfirmingId(null);
     }
   }
 
@@ -60,14 +73,49 @@ export function CareerTemplatePicker() {
             className="flex items-center justify-between rounded-xl border border-border p-4"
           >
             <div>
+              {template.universityName && (
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {template.universityName}
+                </p>
+              )}
               <p className="text-sm font-medium text-foreground">{template.careerName}</p>
               <p className="text-xs text-muted-foreground">
                 {template.subjectCount} asignaturas · {template.totalCredits} créditos
               </p>
             </div>
-            <Button size="sm" variant="outline" onClick={() => handleAttach(template.id)} disabled={attach.isPending}>
-              Usar este pensum
-            </Button>
+
+            {confirmingId === template.id ? (
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => handleDelete(template.id)}
+                  disabled={deleteTemplate.isPending}
+                >
+                  Confirmar
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setConfirmingId(null)}>
+                  Cancelar
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" onClick={() => handleAttach(template.id)} disabled={attach.isPending}>
+                  Usar este pensum
+                </Button>
+                {template.canDelete && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="text-muted-foreground hover:text-destructive"
+                    onClick={() => setConfirmingId(template.id)}
+                    title="Eliminar este pensum"
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                )}
+              </div>
+            )}
           </li>
         ))}
       </ul>

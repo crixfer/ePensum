@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { SUBJECT_STATUSES, STATUS_LABELS_ES, type SubjectView } from "@epensum/shared";
+import { SUBJECT_STATUSES, STATUS_LABELS_ES, type ExtraFieldType, type SubjectView } from "@epensum/shared";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useUpdateSubject } from "@/hooks/usePensum";
@@ -13,7 +13,7 @@ const LETTER_STYLES: Record<string, string> = {
   F: "text-destructive",
 };
 
-export function SubjectRow({ subject }: { subject: SubjectView }) {
+export function SubjectRow({ subject, extraField }: { subject: SubjectView; extraField: ExtraFieldType }) {
   const update = useUpdateSubject();
   const [score, setScore] = useState(subject.finalScore?.toString() ?? "");
   const [teacher, setTeacher] = useState(subject.teacher ?? "");
@@ -42,18 +42,38 @@ export function SubjectRow({ subject }: { subject: SubjectView }) {
 
   return (
     <div className="grid grid-cols-1 gap-3 border-b border-border py-3 last:border-b-0 sm:grid-cols-[auto_1fr_auto_auto_auto_auto] sm:items-center sm:gap-4">
-      <div className="flex items-baseline gap-2 sm:contents">
-        <span className="font-mono text-xs text-muted-foreground">{subject.code}</span>
-        <p className="text-sm font-medium text-foreground">{subject.name}</p>
-      </div>
+      {extraField === "orden" ? (
+        <span className="text-sm text-muted-foreground sm:order-1 sm:w-36">N° {subject.order}</span>
+      ) : (
+        <Input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          onBlur={commitDate}
+          className="w-full sm:order-1 sm:w-36"
+        />
+      )}
 
-      <span className="text-xs text-muted-foreground sm:text-center">{subject.credits} créd.</span>
+      <p className="text-sm font-medium text-foreground sm:order-2">{subject.name}</p>
+
+      <span className="text-xs text-muted-foreground sm:order-3 sm:w-28 sm:text-center">
+        <span className="font-mono">{subject.code}</span> · {subject.credits} créd.
+      </span>
 
       <Select
         value={subject.status}
         onValueChange={(value) => update.mutate({ subjectId: subject.id, update: { status: value } })}
+        disabled={!subject.prerequisiteMet}
       >
-        <SelectTrigger size="sm" className="w-full sm:w-36">
+        <SelectTrigger
+          size="sm"
+          className="w-full sm:order-4 sm:w-36"
+          title={
+            subject.prerequisiteMet
+              ? undefined
+              : `Completa primero ${subject.prerequisiteCode} para poder cambiar el estatus.`
+          }
+        >
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -65,22 +85,25 @@ export function SubjectRow({ subject }: { subject: SubjectView }) {
         </SelectContent>
       </Select>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 sm:order-5 sm:w-20">
         <Input
           type="number"
           min={0}
           max={100}
-          placeholder="Nota"
+          placeholder="0"
           value={score}
           onChange={(e) => setScore(e.target.value)}
           onBlur={commitScore}
-          className="w-20"
+          className="w-14"
         />
-        {subject.letterGrade && (
-          <span className={cn("w-4 text-sm font-semibold", LETTER_STYLES[subject.letterGrade])}>
-            {subject.letterGrade}
-          </span>
-        )}
+        <span
+          className={cn(
+            "w-4 text-sm font-semibold",
+            subject.letterGrade ? LETTER_STYLES[subject.letterGrade] : "text-muted-foreground",
+          )}
+        >
+          {subject.letterGrade ?? "S"}
+        </span>
       </div>
 
       <Input
@@ -88,15 +111,7 @@ export function SubjectRow({ subject }: { subject: SubjectView }) {
         value={teacher}
         onChange={(e) => setTeacher(e.target.value)}
         onBlur={commitTeacher}
-        className="w-full sm:w-40"
-      />
-
-      <Input
-        type="date"
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-        onBlur={commitDate}
-        className="w-full sm:w-36"
+        className="w-full sm:order-6 sm:w-40"
       />
     </div>
   );

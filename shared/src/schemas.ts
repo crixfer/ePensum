@@ -1,5 +1,13 @@
 import { z } from "zod";
 import { SUBJECT_STATUSES } from "./types.js";
+import { UNIVERSITY_PROFILES } from "./universities.js";
+
+/** Student ID format: 5 digits, hyphen, 4 digits — e.g. "20263-0001". */
+export const MATRICULA_PATTERN = /^\d{5}-\d{4}$/;
+
+export const universityIdSchema = z.enum(
+  UNIVERSITY_PROFILES.map((p) => p.id) as [string, ...string[]],
+);
 
 export const subjectStatusSchema = z.enum(SUBJECT_STATUSES);
 
@@ -7,6 +15,7 @@ export const parsedSubjectSchema = z.object({
   code: z.string().min(1),
   name: z.string().min(1),
   credits: z.number().int().positive(),
+  order: z.number().int(),
   prerequisiteCode: z.string().nullable(),
   status: subjectStatusSchema,
   finalScore: z.number().min(0).max(100).nullable(),
@@ -21,6 +30,8 @@ export const parsedQuarterSchema = z.object({
 });
 
 export const pensumImportSchema: z.ZodType<import("./types.js").PensumImportPayload> = z.object({
+  universityId: universityIdSchema.nullable(),
+  universityName: z.string().nullable(),
   careerName: z.string().min(1),
   quarters: z.array(parsedQuarterSchema).min(1),
 });
@@ -36,6 +47,8 @@ export const signupSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   name: z.string().min(1),
+  matricula: z.string().regex(MATRICULA_PATTERN, "Formato esperado: 20263-0001"),
+  universityId: universityIdSchema,
 });
 
 export const loginSchema = z.object({

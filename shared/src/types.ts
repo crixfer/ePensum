@@ -1,3 +1,5 @@
+import type { ExtraFieldType } from "./universities.js";
+
 export const SUBJECT_STATUSES = ["PENDIENTE", "INSCRITA", "EN_CURSO", "COMPLETADO"] as const;
 export type SubjectStatus = (typeof SUBJECT_STATUSES)[number];
 
@@ -16,6 +18,8 @@ export interface ParsedSubject {
   code: string;
   name: string;
   credits: number;
+  /** Position within the pensum (quarter-local index, or a real sequence number like ISFODOSU's N°). */
+  order: number;
   prerequisiteCode: string | null;
   status: SubjectStatus;
   finalScore: number | null;
@@ -30,6 +34,8 @@ export interface ParsedQuarter {
 }
 
 export interface ParsedPensum {
+  universityId: string | null;
+  universityName: string | null;
   careerName: string;
   quarters: ParsedQuarter[];
   warnings: string[];
@@ -43,7 +49,10 @@ export interface SubjectView {
   code: string;
   name: string;
   credits: number;
+  order: number;
   prerequisiteCode: string | null;
+  /** False only when prerequisiteCode names a known subject in this pensum that isn't COMPLETADO yet. */
+  prerequisiteMet: boolean;
   status: SubjectStatus;
   finalScore: number | null;
   letterGrade: LetterGrade;
@@ -60,6 +69,8 @@ export interface QuarterView {
 }
 
 export interface PensumSummary {
+  universityName: string | null;
+  extraField: ExtraFieldType;
   careerName: string;
   totalCredits: number;
   creditsApproved: number;
@@ -80,8 +91,11 @@ export interface PensumView {
 
 export interface PensumTemplateListItem {
   id: string;
+  universityName: string | null;
   careerName: string;
   totalCredits: number;
   subjectCount: number;
   createdAt: string;
+  /** True when the requesting user created this template and no one has attached to it. */
+  canDelete: boolean;
 }

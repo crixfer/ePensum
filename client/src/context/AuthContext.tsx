@@ -5,13 +5,23 @@ interface AuthUser {
   id: string;
   email: string;
   name: string;
+  matricula: string;
+  universityId: string;
+}
+
+interface SignupInput {
+  email: string;
+  password: string;
+  name: string;
+  matricula: string;
+  universityId: string;
 }
 
 interface AuthContextValue {
   user: AuthUser | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, name: string) => Promise<void>;
+  signup: (input: SignupInput) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -34,8 +44,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(loggedInUser);
   }
 
-  async function signup(email: string, password: string, name: string) {
-    const newUser = await api.post<AuthUser>("/auth/signup", { email, password, name });
+  async function signup(input: SignupInput) {
+    const newUser = await api.post<AuthUser>("/auth/signup", input);
     setUser(newUser);
   }
 

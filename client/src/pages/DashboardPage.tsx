@@ -29,7 +29,7 @@ export function DashboardPage() {
   return (
     <div className="space-y-6">
       <SummaryPanel summary={data.summary} />
-      <QuarterAccordion quarters={data.quarters} />
+      <QuarterAccordion quarters={data.quarters} extraField={data.summary.extraField} />
     </div>
   );
 }

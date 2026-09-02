@@ -3,6 +3,7 @@ import type { PensumImportPayload, PensumTemplateListItem, PensumView } from "@e
 import { api, ApiError } from "@/lib/api";
 
 const PENSUM_KEY = ["me", "pensum"];
+const TEMPLATES_KEY = ["pensum-templates"];
 
 export function usePensum() {
   return useQuery({
@@ -35,8 +36,16 @@ export function useUpdateSubject() {
 
 export function useTemplates() {
   return useQuery({
-    queryKey: ["pensum-templates"],
+    queryKey: TEMPLATES_KEY,
     queryFn: () => api.get<PensumTemplateListItem[]>("/pensum-templates"),
+  });
+}
+
+export function useDeleteTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (templateId: string) => api.delete(`/pensum-templates/${templateId}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: TEMPLATES_KEY }),
   });
 }
 
@@ -60,6 +69,9 @@ export function useDetachPensum() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => api.delete("/me/pensum"),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: PENSUM_KEY }),
+    // Remove (not just invalidate) the cached pensum: invalidating alone would still
+    // serve the stale deleted-pensum data to the next page while it refetches in the
+    // background, which briefly bounces OnboardingPage back to "/" before it 404s.
+    onSuccess: () => queryClient.removeQueries({ queryKey: PENSUM_KEY }),
   });
 }

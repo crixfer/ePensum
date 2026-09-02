@@ -3,7 +3,7 @@ import { pensumImportSchema } from "@epensum/shared";
 import { prisma } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
 import { asyncHandler, HttpError } from "../middleware/errorHandler.js";
-import { attachUserToTemplate, importPensumForUser } from "../services/importService.js";
+import { attachUserToTemplate, deletePensumTemplate, importPensumForUser } from "../services/importService.js";
 
 export const templatesRouter = Router();
 
@@ -20,9 +20,9 @@ templatesRouter.post(
 templatesRouter.get(
   "/",
   requireAuth,
-  asyncHandler(async (_req, res) => {
+  asyncHandler(async (req, res) => {
     const templates = await prisma.pensumTemplate.findMany({
-      include: { quarters: { include: { subjects: true } } },
+      include: { quarters: { include: { subjects: true } }, userPensums: { select: { id: true } } },
       orderBy: { createdAt: "desc" },
     });
 
@@ -31,10 +31,12 @@ templatesRouter.get(
         const subjects = t.quarters.flatMap((q) => q.subjects);
         return {
           id: t.id,
+          universityName: t.universityName,
           careerName: t.careerName,
           totalCredits: subjects.reduce((sum, s) => sum + s.credits, 0),
           subjectCount: subjects.length,
           createdAt: t.createdAt.toISOString(),
+          canDelete: t.createdById === req.userId && t.userPensums.length === 0,
         };
       }),
     );
@@ -60,5 +62,14 @@ templatesRouter.post(
   asyncHandler(async (req, res) => {
     const result = await attachUserToTemplate(req.userId!, req.params.id);
     res.status(201).json(result);
+  }),
+);
+
+templatesRouter.delete(
+  "/:id",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    await deletePensumTemplate(req.userId!, req.params.id);
+    res.status(204).end();
   }),
 );

@@ -1,4 +1,5 @@
 import type { HonorClassification, LetterGrade, QuarterView, SubjectStatus, SubjectView } from "./types.js";
+import type { ExtraFieldType } from "./universities.js";
 
 /** Mirrors the source spreadsheet's INDICE formula: derived from the score, never stored. */
 export function computeLetterGrade(score: number | null | undefined): LetterGrade {
@@ -27,13 +28,34 @@ export function computeHonor(weightedIndex: number | null): HonorClassification 
   return null;
 }
 
+/**
+ * A prerequisite only blocks the subject when it names another subject actually
+ * present in this pensum and that subject isn't COMPLETADO yet. Some source pensums
+ * use non-code prerequisites (e.g. "TODAS", "7MO. CUAT.") that can't be resolved to
+ * a specific subject — those can't be validated, so they never block.
+ */
+export function computePrerequisiteMet(
+  prerequisiteCode: string | null,
+  statusByCode: Map<string, SubjectStatus>,
+): boolean {
+  if (!prerequisiteCode) return true;
+  const prerequisiteStatus = statusByCode.get(prerequisiteCode);
+  if (!prerequisiteStatus) return true;
+  return prerequisiteStatus === "COMPLETADO";
+}
+
 interface SubjectForSummary {
   credits: number;
   status: SubjectStatus;
   finalScore: number | null;
 }
 
-export function computePensumSummary(careerName: string, subjects: SubjectForSummary[]) {
+export function computePensumSummary(
+  universityName: string | null,
+  extraField: ExtraFieldType,
+  careerName: string,
+  subjects: SubjectForSummary[],
+) {
   const totalCredits = subjects.reduce((sum, s) => sum + s.credits, 0);
   const approved = subjects.filter((s) => s.status === "COMPLETADO");
   const pending = subjects.filter((s) => s.status !== "COMPLETADO");
@@ -49,6 +71,8 @@ export function computePensumSummary(careerName: string, subjects: SubjectForSum
   const weightedIndex = scores.length > 0 ? scores.reduce((sum, v) => sum + v, 0) / scores.length : null;
 
   return {
+    universityName,
+    extraField,
     careerName,
     totalCredits,
     creditsApproved,

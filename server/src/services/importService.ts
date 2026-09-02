@@ -11,6 +11,8 @@ export async function importPensumForUser(userId: string, parsed: PensumImportPa
   return prisma.$transaction(async (tx) => {
     const template = await tx.pensumTemplate.create({
       data: {
+        universityId: parsed.universityId ?? "otra",
+        universityName: parsed.universityName,
         careerName: parsed.careerName,
         createdById: userId,
         quarters: {
@@ -18,8 +20,8 @@ export async function importPensumForUser(userId: string, parsed: PensumImportPa
             order: quarter.order,
             name: quarter.name,
             subjects: {
-              create: quarter.subjects.map((subject, index) => ({
-                order: index,
+              create: quarter.subjects.map((subject) => ({
+                order: subject.order,
                 code: subject.code,
                 name: subject.name,
                 credits: subject.credits,
@@ -95,4 +97,19 @@ export async function detachUserPensum(userId: string) {
   const existing = await prisma.userPensum.findUnique({ where: { userId } });
   if (!existing) throw new HttpError(404, "No tienes un pensum activo");
   await prisma.userPensum.delete({ where: { userId } });
+}
+
+export async function deletePensumTemplate(userId: string, templateId: string) {
+  const template = await prisma.pensumTemplate.findUnique({ where: { id: templateId } });
+  if (!template) throw new HttpError(404, "Pensum no encontrado");
+  if (template.createdById !== userId) {
+    throw new HttpError(403, "Solo quien subió este pensum puede eliminarlo.");
+  }
+
+  const inUse = await prisma.userPensum.findFirst({ where: { templateId } });
+  if (inUse) {
+    throw new HttpError(409, "No se puede eliminar: hay estudiantes usando este pensum.");
+  }
+
+  await prisma.pensumTemplate.delete({ where: { id: templateId } });
 }

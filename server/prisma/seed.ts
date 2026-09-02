@@ -10,6 +10,8 @@ async function main() {
     create: {
       email: "seed@epensum.local",
       name: "Seed Owner",
+      matricula: "20263-0000",
+      universityId: "unicaribe",
       passwordHash: await hashPassword("seedpassword"),
     },
   });
@@ -25,6 +27,7 @@ async function main() {
   await prisma.pensumTemplate.create({
     data: {
       careerName: "Ingeniería de Software (ejemplo)",
+      universityId: "unicaribe",
       createdById: owner.id,
       quarters: {
         create: [

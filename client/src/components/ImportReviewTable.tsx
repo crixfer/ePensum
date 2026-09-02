@@ -10,17 +10,28 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { cn, toTitleCase } from "@/lib/utils";
 
 interface ImportReviewTableProps {
   parsed: ParsedPensum;
-  onConfirm: (payload: { careerName: string; quarters: { order: number; name: string; subjects: ParsedSubject[] }[] }) => void;
+  onConfirm: (payload: {
+    universityId: string | null;
+    universityName: string | null;
+    careerName: string;
+    quarters: { order: number; name: string; subjects: ParsedSubject[] }[];
+  }) => void;
   isSubmitting: boolean;
 }
 
 export function ImportReviewTable({ parsed, onConfirm, isSubmitting }: ImportReviewTableProps) {
+  const [universityName, setUniversityName] = useState(parsed.universityName ?? "");
   const [careerName, setCareerName] = useState(parsed.careerName);
-  const [quarters, setQuarters] = useState(parsed.quarters);
+  const [quarters, setQuarters] = useState(() =>
+    parsed.quarters.map((q) => ({
+      ...q,
+      subjects: q.subjects.map((s) => ({ ...s, name: toTitleCase(s.name) })),
+    })),
+  );
 
   function updateSubject(quarterIdx: number, subjectIdx: number, patch: Partial<ParsedSubject>) {
     setQuarters((prev) =>
@@ -44,9 +55,20 @@ export function ImportReviewTable({ parsed, onConfirm, isSubmitting }: ImportRev
 
   return (
     <div className="space-y-6">
-      <div className="space-y-1.5">
-        <Label htmlFor="career-name">Nombre de la carrera</Label>
-        <Input id="career-name" value={careerName} onChange={(e) => setCareerName(e.target.value)} />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="university-name">Universidad</Label>
+          <Input
+            id="university-name"
+            placeholder="Ej. Universidad del Caribe"
+            value={universityName}
+            onChange={(e) => setUniversityName(e.target.value)}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="career-name">Nombre de la carrera</Label>
+          <Input id="career-name" value={careerName} onChange={(e) => setCareerName(e.target.value)} />
+        </div>
       </div>
 
       {parsed.warnings.length > 0 && (
@@ -130,7 +152,14 @@ export function ImportReviewTable({ parsed, onConfirm, isSubmitting }: ImportRev
       </div>
 
       <Button
-        onClick={() => onConfirm({ careerName, quarters })}
+        onClick={() =>
+          onConfirm({
+            universityId: parsed.universityId,
+            universityName: universityName.trim() || null,
+            careerName,
+            quarters,
+          })
+        }
         disabled={isSubmitting}
         className="w-full sm:w-auto"
       >

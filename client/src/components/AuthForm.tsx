@@ -1,18 +1,36 @@
 import { useState, type FormEvent } from "react";
+import { MATRICULA_PATTERN, UNIVERSITY_PROFILES } from "@epensum/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ApiError } from "@/lib/api";
+
+interface SignupValues {
+  email: string;
+  password: string;
+  name: string;
+  matricula: string;
+  universityId: string;
+}
 
 interface AuthFormProps {
   mode: "login" | "signup";
-  onSubmit: (values: { email: string; password: string; name?: string }) => Promise<void>;
+  onSubmit: (values: { email: string; password: string } | SignupValues) => Promise<void>;
+}
+
+function formatMatricula(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 9);
+  return digits.length <= 5 ? digits : `${digits.slice(0, 5)}-${digits.slice(5)}`;
 }
 
 export function AuthForm({ mode, onSubmit }: AuthFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
+  const [nombres, setNombres] = useState("");
+  const [apellidos, setApellidos] = useState("");
+  const [matricula, setMatricula] = useState("");
+  const [universityId, setUniversityId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -21,7 +39,17 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
     setError(null);
     setIsSubmitting(true);
     try {
-      await onSubmit({ email, password, name: mode === "signup" ? name : undefined });
+      if (mode === "signup") {
+        await onSubmit({
+          email,
+          password,
+          name: `${nombres} ${apellidos}`.trim(),
+          matricula,
+          universityId,
+        });
+      } else {
+        await onSubmit({ email, password });
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Ocurrió un error inesperado");
     } finally {
@@ -32,10 +60,45 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {mode === "signup" && (
-        <div className="space-y-1.5">
-          <Label htmlFor="name">Nombre</Label>
-          <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
-        </div>
+        <>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="nombres">Nombres</Label>
+              <Input id="nombres" value={nombres} onChange={(e) => setNombres(e.target.value)} required />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="apellidos">Apellidos</Label>
+              <Input id="apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} required />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="universidad">Universidad</Label>
+            <Select value={universityId} onValueChange={setUniversityId} required>
+              <SelectTrigger id="universidad" className="w-full">
+                <SelectValue placeholder="Selecciona tu universidad" />
+              </SelectTrigger>
+              <SelectContent>
+                {UNIVERSITY_PROFILES.map((profile) => (
+                  <SelectItem key={profile.id} value={profile.id}>
+                    {profile.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="matricula">Matrícula</Label>
+            <Input
+              id="matricula"
+              placeholder="20263-0001"
+              value={matricula}
+              onChange={(e) => setMatricula(formatMatricula(e.target.value))}
+              pattern={MATRICULA_PATTERN.source}
+              title="Formato: 20263-0001"
+              required
+            />
+          </div>
+        </>
       )}
       <div className="space-y-1.5">
         <Label htmlFor="email">Correo</Label>

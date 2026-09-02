@@ -1,4 +1,5 @@
 import { Router } from "express";
+import type { User } from "@prisma/client";
 import { loginSchema, signupSchema } from "@epensum/shared";
 import { prisma } from "../db.js";
 import { hashPassword, verifyPassword } from "../lib/password.js";
@@ -8,10 +9,20 @@ import { requireAuth } from "../middleware/auth.js";
 
 export const authRouter = Router();
 
+function serializeUser(user: User) {
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    matricula: user.matricula,
+    universityId: user.universityId,
+  };
+}
+
 authRouter.post(
   "/signup",
   asyncHandler(async (req, res) => {
-    const { email, password, name } = signupSchema.parse(req.body);
+    const { email, password, name, matricula, universityId } = signupSchema.parse(req.body);
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
@@ -20,12 +31,12 @@ authRouter.post(
 
     const passwordHash = await hashPassword(password);
     const user = await prisma.user.create({
-      data: { email, passwordHash, name },
+      data: { email, passwordHash, name, matricula, universityId },
     });
 
     const token = signSession({ userId: user.id });
     res.cookie(SESSION_COOKIE_NAME, token, SESSION_COOKIE_OPTIONS);
-    res.status(201).json({ id: user.id, email: user.email, name: user.name });
+    res.status(201).json(serializeUser(user));
   }),
 );
 
@@ -41,7 +52,7 @@ authRouter.post(
 
     const token = signSession({ userId: user.id });
     res.cookie(SESSION_COOKIE_NAME, token, SESSION_COOKIE_OPTIONS);
-    res.json({ id: user.id, email: user.email, name: user.name });
+    res.json(serializeUser(user));
   }),
 );
 
@@ -56,6 +67,6 @@ authRouter.get(
   asyncHandler(async (req, res) => {
     const user = await prisma.user.findUnique({ where: { id: req.userId } });
     if (!user) throw new HttpError(401, "No autenticado");
-    res.json({ id: user.id, email: user.email, name: user.name });
+    res.json(serializeUser(user));
   }),
 );
