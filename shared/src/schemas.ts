@@ -15,6 +15,7 @@ export const parsedSubjectSchema = z.object({
   code: z.string().min(1),
   name: z.string().min(1),
   credits: z.number().int().positive(),
+  totalHours: z.number().int().nonnegative().nullable(),
   order: z.number().int(),
   prerequisiteCode: z.string().nullable(),
   status: subjectStatusSchema,

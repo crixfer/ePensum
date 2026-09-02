@@ -3,9 +3,9 @@ import { prisma } from "../db.js";
 import { HttpError } from "../middleware/errorHandler.js";
 
 export async function importPensumForUser(userId: string, parsed: PensumImportPayload) {
-  const existing = await prisma.userPensum.findUnique({ where: { userId } });
+  const existing = await prisma.userPensum.findFirst({ where: { userId, active: true } });
   if (existing) {
-    throw new HttpError(409, "Ya tienes un pensum activo. Elimínalo desde ajustes antes de importar otro.");
+    throw new HttpError(409, "Ya tienes un pensum activo. Cámbialo o elimínalo desde ajustes antes de importar otro.");
   }
 
   return prisma.$transaction(async (tx) => {
@@ -25,6 +25,7 @@ export async function importPensumForUser(userId: string, parsed: PensumImportPa
                 code: subject.code,
                 name: subject.name,
                 credits: subject.credits,
+                totalHours: subject.totalHours,
                 prerequisiteCode: subject.prerequisiteCode,
               })),
             },
@@ -64,9 +65,9 @@ export async function importPensumForUser(userId: string, parsed: PensumImportPa
 }
 
 export async function attachUserToTemplate(userId: string, templateId: string) {
-  const existing = await prisma.userPensum.findUnique({ where: { userId } });
+  const existing = await prisma.userPensum.findFirst({ where: { userId, active: true } });
   if (existing) {
-    throw new HttpError(409, "Ya tienes un pensum activo. Elimínalo desde ajustes antes de elegir otro.");
+    throw new HttpError(409, "Ya tienes un pensum activo. Cámbialo o elimínalo desde ajustes antes de elegir otro.");
   }
 
   const template = await prisma.pensumTemplate.findUnique({
@@ -74,6 +75,17 @@ export async function attachUserToTemplate(userId: string, templateId: string) {
     include: { quarters: { include: { subjects: true } } },
   });
   if (!template) throw new HttpError(404, "Pensum no encontrado");
+
+  // Coming back to a pensum this student had before (and archived by switching away) —
+  // reactivate it instead of creating a blank one, so their old progress isn't lost.
+  const archived = await prisma.userPensum.findFirst({
+    where: { userId, templateId, active: false },
+    orderBy: { createdAt: "desc" },
+  });
+  if (archived) {
+    await prisma.userPensum.update({ where: { id: archived.id }, data: { active: true } });
+    return { templateId: template.id };
+  }
 
   return prisma.$transaction(async (tx) => {
     const userPensum = await tx.userPensum.create({
@@ -93,10 +105,18 @@ export async function attachUserToTemplate(userId: string, templateId: string) {
   });
 }
 
+/** Fully erases the active pensum and all its tracked progress — irreversible. */
 export async function detachUserPensum(userId: string) {
-  const existing = await prisma.userPensum.findUnique({ where: { userId } });
+  const existing = await prisma.userPensum.findFirst({ where: { userId, active: true } });
   if (!existing) throw new HttpError(404, "No tienes un pensum activo");
-  await prisma.userPensum.delete({ where: { userId } });
+  await prisma.userPensum.delete({ where: { id: existing.id } });
+}
+
+/** Switching pensums: archives the current one (keeping all its progress) instead of deleting it. */
+export async function archiveUserPensum(userId: string) {
+  const existing = await prisma.userPensum.findFirst({ where: { userId, active: true } });
+  if (!existing) throw new HttpError(404, "No tienes un pensum activo");
+  await prisma.userPensum.update({ where: { id: existing.id }, data: { active: false } });
 }
 
 export async function deletePensumTemplate(userId: string, templateId: string) {
@@ -106,7 +126,7 @@ export async function deletePensumTemplate(userId: string, templateId: string) {
     throw new HttpError(403, "Solo quien subió este pensum puede eliminarlo.");
   }
 
-  const inUse = await prisma.userPensum.findFirst({ where: { templateId } });
+  const inUse = await prisma.userPensum.findFirst({ where: { templateId, active: true } });
   if (inUse) {
     throw new HttpError(409, "No se puede eliminar: hay estudiantes usando este pensum.");
   }

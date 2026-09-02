@@ -10,7 +10,7 @@ export function SummaryPanel({ summary }: { summary: PensumSummary }) {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             {summary.universityName && (
-              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {summary.universityName}
               </p>
             )}

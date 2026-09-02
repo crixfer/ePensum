@@ -16,7 +16,7 @@ export function SignupPage() {
         <Card className="w-full max-w-sm rounded-2xl border-border shadow-sm">
           <CardHeader className="items-center text-center">
             <img src={emblem} alt="" className="mx-auto mb-2 h-20 w-20" />
-            <Logo className="mb-2 text-2xl" />
+            <Logo className="mb-2 text-2xl" slogan />
             <CardTitle className="text-2xl font-semibold tracking-tight">Crea tu cuenta</CardTitle>
             <p className="text-sm text-muted-foreground">Empieza a seguir el progreso de tu carrera</p>
           </CardHeader>

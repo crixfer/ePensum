@@ -36,10 +36,16 @@ function groupQuartersByYear(quarters: QuarterView[]): QuarterView[][] {
 /** Column labels aligned to SubjectRow's grid — same template, order, and widths. */
 function SubjectRowHeader({ extraField }: { extraField: ExtraFieldType }) {
   return (
-    <div className="hidden border-b border-border pb-2 text-xs font-medium tracking-wide text-muted-foreground sm:grid sm:grid-cols-[auto_1fr_auto_auto_auto_auto] sm:items-center sm:gap-4">
-      <span className="sm:order-1 sm:w-36">{extraField === "orden" ? "N°" : "Fecha"}</span>
+    <div className="hidden border-b border-border pb-2 text-xs font-medium tracking-wide text-primary sm:grid sm:grid-cols-[auto_1fr_auto_auto_auto_auto] sm:items-center sm:gap-4">
+      <div className="sm:order-1 flex items-center sm:gap-1">
+        <span className={extraField === "orden" ? "sm:w-6" : "sm:w-36"}>
+          {extraField === "orden" ? "N°" : "Fecha"}
+        </span>
+        <span className="sm:w-6 sm:text-center">CR</span>
+        <span className="sm:w-6 sm:text-center">HT</span>
+      </div>
       <span className="sm:order-2">Asignatura</span>
-      <span className="sm:order-3 sm:w-28 sm:text-center">Código · Créd.</span>
+      <span className="sm:order-3 sm:w-40 sm:text-center">Clave · Pre</span>
       <span className="sm:order-4 sm:w-36">Estatus</span>
       <span className="sm:order-5 sm:w-20">Nota</span>
       <span className="sm:order-6 sm:w-40">Docente</span>

@@ -35,6 +35,9 @@ export const HEADER_ALIASES = {
   clave: ["clave"],
   asignatura: ["asignatura", "asignaturas"],
   credito: ["credito", "creditos", "cr"],
+  // The source sheet repeats "HT" for a partial hour breakdown before the real total —
+  // column position always wins ties, so the rightmost "HT" (the actual total) sticks.
+  horasTotales: ["ht", "horas totales", "horas total"],
   orden: ["no", "no.", "n", "n°", "num", "numero"],
   prereq: ["pre-req", "prereq", "pre req", "prerrequisitos", "prerequisitos", "pre requisitos", "prerrequisito"],
   estatus: ["estatus", "estado"],
@@ -170,6 +173,8 @@ export interface RawSubjectFields {
   code: string;
   name: string;
   credits: string;
+  /** Optional: not every source document carries a total-hours column. */
+  totalHours?: string;
   order: number;
   prerequisite: string;
   status: string;
@@ -204,10 +209,21 @@ export function buildParsedSubject(fields: RawSubjectFields, warnings: string[])
 
   const code = normalizeCode(fields.code);
 
+  let totalHours: number | null = null;
+  if (fields.totalHours) {
+    const parsedHours = Number(fields.totalHours);
+    if (Number.isFinite(parsedHours)) {
+      totalHours = parsedHours;
+    } else {
+      warnings.push(`Asignatura ${fields.code}: las horas totales "${fields.totalHours}" no son un número.`);
+    }
+  }
+
   return {
     code,
     name: fields.name || code,
     credits: Number(fields.credits),
+    totalHours,
     order: fields.order,
     prerequisiteCode:
       !fields.prerequisite || normalizeText(fields.prerequisite) === "na"
@@ -325,6 +341,7 @@ export function parsePensumWorkbook(buffer: ArrayBuffer): ParsedPensum {
             code,
             name: cellText(subjectRow, columns.asignatura),
             credits: creditsRaw,
+            totalHours: cellText(subjectRow, columns.horasTotales),
             order: Number.isFinite(parsedOrden) && ordenRaw ? parsedOrden : subjectIndex,
             prerequisite: cellText(subjectRow, columns.prereq),
             status: cellText(subjectRow, columns.estatus),

@@ -4,7 +4,7 @@ import { prisma } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
 import { asyncHandler, HttpError } from "../middleware/errorHandler.js";
 import { getPensumViewForUser } from "../services/pensumService.js";
-import { detachUserPensum } from "../services/importService.js";
+import { archiveUserPensum, detachUserPensum } from "../services/importService.js";
 
 export const meRouter = Router();
 
@@ -15,6 +15,14 @@ meRouter.get(
   asyncHandler(async (req, res) => {
     const view = await getPensumViewForUser(req.userId!);
     res.json(view);
+  }),
+);
+
+meRouter.post(
+  "/pensum/archive",
+  asyncHandler(async (req, res) => {
+    await archiveUserPensum(req.userId!);
+    res.status(204).end();
   }),
 );
 
@@ -31,7 +39,7 @@ meRouter.patch(
   asyncHandler(async (req, res) => {
     const update = subjectProgressUpdateSchema.parse(req.body);
 
-    const userPensum = await prisma.userPensum.findUnique({ where: { userId: req.userId! } });
+    const userPensum = await prisma.userPensum.findFirst({ where: { userId: req.userId!, active: true } });
     if (!userPensum) throw new HttpError(404, "No tienes un pensum activo");
 
     await prisma.subjectProgress.upsert({

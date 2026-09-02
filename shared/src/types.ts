@@ -18,6 +18,8 @@ export interface ParsedSubject {
   code: string;
   name: string;
   credits: number;
+  /** Total hours (HT = theoretical + practical + independent) the source pensum assigns this subject, when available. */
+  totalHours: number | null;
   /** Position within the pensum (quarter-local index, or a real sequence number like ISFODOSU's N°). */
   order: number;
   prerequisiteCode: string | null;
@@ -49,6 +51,7 @@ export interface SubjectView {
   code: string;
   name: string;
   credits: number;
+  totalHours: number | null;
   order: number;
   prerequisiteCode: string | null;
   /** False only when prerequisiteCode names a known subject in this pensum that isn't COMPLETADO yet. */
@@ -69,6 +72,7 @@ export interface QuarterView {
 }
 
 export interface PensumSummary {
+  universityId: string;
   universityName: string | null;
   extraField: ExtraFieldType;
   careerName: string;

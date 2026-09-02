@@ -51,6 +51,7 @@ interface SubjectForSummary {
 }
 
 export function computePensumSummary(
+  universityId: string,
   universityName: string | null,
   extraField: ExtraFieldType,
   careerName: string,
@@ -71,6 +72,7 @@ export function computePensumSummary(
   const weightedIndex = scores.length > 0 ? scores.reduce((sum, v) => sum + v, 0) / scores.length : null;
 
   return {
+    universityId,
     universityName,
     extraField,
     careerName,

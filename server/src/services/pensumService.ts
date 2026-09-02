@@ -12,8 +12,8 @@ import { prisma } from "../db.js";
 import { HttpError } from "../middleware/errorHandler.js";
 
 export async function getPensumViewForUser(userId: string): Promise<PensumView> {
-  const userPensum = await prisma.userPensum.findUnique({
-    where: { userId },
+  const userPensum = await prisma.userPensum.findFirst({
+    where: { userId, active: true },
     include: {
       template: {
         include: {
@@ -51,6 +51,7 @@ export async function getPensumViewForUser(userId: string): Promise<PensumView> 
         code: subject.code,
         name: subject.name,
         credits: subject.credits,
+        totalHours: subject.totalHours,
         order: subject.order,
         prerequisiteCode: subject.prerequisiteCode,
         prerequisiteMet: computePrerequisiteMet(subject.prerequisiteCode, statusByCode),
@@ -66,6 +67,7 @@ export async function getPensumViewForUser(userId: string): Promise<PensumView> 
 
   const allSubjects = quarterViews.flatMap((q) => q.subjects);
   const summary = computePensumSummary(
+    userPensum.template.universityId,
     userPensum.template.universityName,
     getUniversityProfile(userPensum.template.universityId).extraField,
     userPensum.template.careerName,

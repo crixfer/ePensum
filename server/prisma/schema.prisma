@@ -52,6 +52,7 @@ model Subject {
   code             String
   name             String
   credits          Int
+  totalHours       Int?
   prerequisiteCode String?
   progress         SubjectProgress[]
 
@@ -60,12 +61,16 @@ model Subject {
 
 model UserPensum {
   id         String            @id @default(cuid())
-  userId     String            @unique
+  userId     String
   user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   templateId String
   template   PensumTemplate    @relation(fields: [templateId], references: [id])
+  /// False once the student switches to a different pensum — archived, not deleted, so their old progress stays intact.
+  active     Boolean           @default(true)
   createdAt  DateTime          @default(now())
   progress   SubjectProgress[]
+
+  @@index([userId, active])
 }
 
 model SubjectProgress {

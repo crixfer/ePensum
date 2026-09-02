@@ -22,7 +22,10 @@ templatesRouter.get(
   requireAuth,
   asyncHandler(async (req, res) => {
     const templates = await prisma.pensumTemplate.findMany({
-      include: { quarters: { include: { subjects: true } }, userPensums: { select: { id: true } } },
+      include: {
+        quarters: { include: { subjects: true } },
+        userPensums: { where: { active: true }, select: { id: true } },
+      },
       orderBy: { createdAt: "desc" },
     });
 

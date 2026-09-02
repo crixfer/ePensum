@@ -1,12 +1,15 @@
 import { Navigate } from "react-router-dom";
 import { usePensum } from "@/hooks/usePensum";
+import { useAuth } from "@/context/AuthContext";
 import { ApiError } from "@/lib/api";
 import { SummaryPanel } from "@/components/SummaryPanel";
 import { QuarterAccordion } from "@/components/QuarterAccordion";
+import { GraduationCard } from "@/components/GraduationCard";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function DashboardPage() {
   const { data, isLoading, error } = usePensum();
+  const { user } = useAuth();
 
   if (isLoading) {
     return (
@@ -26,10 +29,13 @@ export function DashboardPage() {
     return <p className="text-sm text-destructive">No se pudo cargar tu pensum. Intenta de nuevo más tarde.</p>;
   }
 
+  const isPensumCompleted = data.quarters.length > 0 && data.quarters.every((q) => q.status === "COMPLETADO");
+
   return (
     <div className="space-y-6">
       <SummaryPanel summary={data.summary} />
       <QuarterAccordion quarters={data.quarters} extraField={data.summary.extraField} />
+      {isPensumCompleted && user && <GraduationCard name={user.name} careerName={data.summary.careerName} />}
     </div>
   );
 }

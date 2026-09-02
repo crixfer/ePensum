@@ -75,3 +75,12 @@ export function useDetachPensum() {
     onSuccess: () => queryClient.removeQueries({ queryKey: PENSUM_KEY }),
   });
 }
+
+/** Switches pensums: archives (not deletes) the current one, so its progress stays intact. */
+export function useArchivePensum() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.post("/me/pensum/archive"),
+    onSuccess: () => queryClient.removeQueries({ queryKey: PENSUM_KEY }),
+  });
+}
