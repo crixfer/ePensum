@@ -169,6 +169,34 @@ export async function archiveUserPensum(userId: string) {
   await prisma.userPensum.update({ where: { id: existing.id }, data: { active: false } });
 }
 
+/** Renaming the university/institution only — much lower risk than editing subject
+ * structure, but a shared template still shouldn't be renamed out from under other
+ * students without being its sole user (or an admin doing cleanup). */
+export async function updateActivePensumUniversityName(userId: string, universityName: string | null) {
+  const userPensum = await prisma.userPensum.findFirst({ where: { userId, active: true } });
+  if (!userPensum) throw new HttpError(404, "No tienes un pensum activo");
+
+  const requestingUser = await prisma.user.findUnique({ where: { id: userId } });
+  const isAdmin = requestingUser?.isAdmin ?? false;
+
+  if (!isAdmin) {
+    const otherUsers = await prisma.userPensum.findFirst({
+      where: { templateId: userPensum.templateId, userId: { not: userId } },
+    });
+    if (otherUsers) {
+      throw new HttpError(
+        403,
+        "No puedes editar un pensum que comparten otros estudiantes. Contacta a un administrador.",
+      );
+    }
+  }
+
+  await prisma.pensumTemplate.update({
+    where: { id: userPensum.templateId },
+    data: { universityName },
+  });
+}
+
 export async function deletePensumTemplate(userId: string, templateId: string) {
   const template = await prisma.pensumTemplate.findUnique({ where: { id: templateId } });
   if (!template) throw new HttpError(404, "Pensum no encontrado");

@@ -1,18 +1,24 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Repeat, Trash2 } from "lucide-react";
+import { Pencil, Repeat, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthContext";
-import { useArchivePensum, useDetachPensum, usePensum } from "@/hooks/usePensum";
+import { ApiError } from "@/lib/api";
+import { useArchivePensum, useDetachPensum, usePensum, useUpdateUniversityName } from "@/hooks/usePensum";
 
 export function SettingsPage() {
   const { user, logout } = useAuth();
   const { data: pensum } = usePensum();
   const archive = useArchivePensum();
   const detach = useDetachPensum();
+  const updateUniversityName = useUpdateUniversityName();
   const navigate = useNavigate();
   const [confirming, setConfirming] = useState<"change" | "delete" | null>(null);
+  const [editingUniversity, setEditingUniversity] = useState(false);
+  const [universityDraft, setUniversityDraft] = useState("");
+  const [universityError, setUniversityError] = useState<string | null>(null);
 
   async function handleLogout() {
     await logout();
@@ -27,6 +33,22 @@ export function SettingsPage() {
     }
     setConfirming(null);
     navigate("/onboarding");
+  }
+
+  function startEditingUniversity() {
+    setUniversityDraft(pensum?.summary.universityName ?? "");
+    setUniversityError(null);
+    setEditingUniversity(true);
+  }
+
+  async function handleSaveUniversity() {
+    setUniversityError(null);
+    try {
+      await updateUniversityName.mutateAsync(universityDraft.trim() || null);
+      setEditingUniversity(false);
+    } catch (err) {
+      setUniversityError(err instanceof ApiError ? err.message : "No se pudo actualizar la universidad");
+    }
   }
 
   return (
@@ -50,12 +72,40 @@ export function SettingsPage() {
 
       <Card className="rounded-2xl border-border shadow-sm">
         <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
-          <div>
+          <div className="min-w-0 flex-1">
             <CardTitle className="text-lg font-medium">Tu pensum</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              {pensum?.summary.careerName ?? "Sin pensum activo"}
-              {pensum?.summary.universityName ? ` · ${pensum.summary.universityName}` : ""}
-            </p>
+            <p className="text-sm text-muted-foreground">{pensum?.summary.careerName ?? "Sin pensum activo"}</p>
+            {editingUniversity ? (
+              <div className="mt-2 space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={universityDraft}
+                    onChange={(e) => setUniversityDraft(e.target.value)}
+                    placeholder="Nombre de la universidad"
+                    className="h-8"
+                    autoFocus
+                  />
+                  <Button size="sm" onClick={handleSaveUniversity} disabled={updateUniversityName.isPending}>
+                    Guardar
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setEditingUniversity(false)}>
+                    Cancelar
+                  </Button>
+                </div>
+                {universityError && <p className="text-sm text-destructive">{universityError}</p>}
+              </div>
+            ) : (
+              pensum && (
+                <button
+                  type="button"
+                  onClick={startEditingUniversity}
+                  className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  {pensum.summary.universityName ?? "Agregar nombre de universidad"}
+                  <Pencil className="size-3.5" />
+                </button>
+              )
+            )}
           </div>
           <Button
             size="icon"

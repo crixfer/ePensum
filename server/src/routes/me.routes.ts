@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { subjectProgressUpdateSchema } from "@epensum/shared";
+import { subjectProgressUpdateSchema, updateUniversityNameSchema } from "@epensum/shared";
 import { prisma } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
 import { asyncHandler, HttpError } from "../middleware/errorHandler.js";
 import { getPensumViewForUser } from "../services/pensumService.js";
-import { archiveUserPensum, detachUserPensum } from "../services/importService.js";
+import { archiveUserPensum, detachUserPensum, updateActivePensumUniversityName } from "../services/importService.js";
 
 export const meRouter = Router();
 
@@ -13,6 +13,16 @@ meRouter.use(requireAuth);
 meRouter.get(
   "/pensum",
   asyncHandler(async (req, res) => {
+    const view = await getPensumViewForUser(req.userId!);
+    res.json(view);
+  }),
+);
+
+meRouter.patch(
+  "/pensum/university",
+  asyncHandler(async (req, res) => {
+    const { universityName } = updateUniversityNameSchema.parse(req.body);
+    await updateActivePensumUniversityName(req.userId!, universityName);
     const view = await getPensumViewForUser(req.userId!);
     res.json(view);
   }),

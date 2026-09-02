@@ -44,6 +44,10 @@ export const subjectProgressUpdateSchema = z.object({
   completedDate: z.string().nullable().optional(),
 });
 
+export const updateUniversityNameSchema = z.object({
+  universityName: z.string().min(1).nullable(),
+});
+
 export const signupSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),

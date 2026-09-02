@@ -34,6 +34,17 @@ export function useUpdateSubject() {
   });
 }
 
+export function useUpdateUniversityName() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (universityName: string | null) =>
+      api.patch<PensumView>("/me/pensum/university", { universityName }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(PENSUM_KEY, data);
+    },
+  });
+}
+
 export function useTemplates() {
   return useQuery({
     queryKey: TEMPLATES_KEY,
