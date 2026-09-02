@@ -1,0 +1,80 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id               String           @id @default(cuid())
+  email            String           @unique
+  passwordHash     String
+  name             String
+  createdAt        DateTime         @default(now())
+  pensum           UserPensum?
+  createdTemplates PensumTemplate[] @relation("TemplateAuthor")
+}
+
+model PensumTemplate {
+  id          String       @id @default(cuid())
+  careerName  String
+  createdById String
+  createdBy   User         @relation("TemplateAuthor", fields: [createdById], references: [id])
+  createdAt   DateTime     @default(now())
+  quarters    Quarter[]
+  userPensums UserPensum[]
+
+  @@index([careerName])
+}
+
+model Quarter {
+  id         String         @id @default(cuid())
+  templateId String
+  template   PensumTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  order      Int
+  name       String
+  subjects   Subject[]
+
+  @@unique([templateId, order])
+}
+
+model Subject {
+  id               String            @id @default(cuid())
+  quarterId        String
+  quarter          Quarter           @relation(fields: [quarterId], references: [id], onDelete: Cascade)
+  order            Int
+  code             String
+  name             String
+  credits          Int
+  prerequisiteCode String?
+  progress         SubjectProgress[]
+
+  @@unique([quarterId, code])
+}
+
+model UserPensum {
+  id         String            @id @default(cuid())
+  userId     String            @unique
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  templateId String
+  template   PensumTemplate    @relation(fields: [templateId], references: [id])
+  createdAt  DateTime          @default(now())
+  progress   SubjectProgress[]
+}
+
+model SubjectProgress {
+  id            String     @id @default(cuid())
+  userPensumId  String
+  userPensum    UserPensum @relation(fields: [userPensumId], references: [id], onDelete: Cascade)
+  subjectId     String
+  subject       Subject    @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  status        String     @default("PENDIENTE") // one of SubjectStatus in @epensum/shared, validated at the API boundary
+  finalScore    Float?
+  teacher       String?
+  completedDate DateTime?
+  updatedAt     DateTime   @updatedAt
+
+  @@unique([userPensumId, subjectId])
+}
