@@ -51,7 +51,7 @@ export function SubjectRow({ subject, extraField }: { subject: SubjectView; extr
             value={date}
             onChange={(e) => setDate(e.target.value)}
             onBlur={commitDate}
-            className="w-full sm:w-36"
+            className="w-full text-muted-foreground/60 sm:w-36"
           />
         )}
 
@@ -123,7 +123,7 @@ export function SubjectRow({ subject, extraField }: { subject: SubjectView; extr
         value={teacher}
         onChange={(e) => setTeacher(e.target.value)}
         onBlur={commitTeacher}
-        className="w-full sm:order-6 sm:w-40"
+        className="w-full placeholder:text-muted-foreground/60 sm:order-6 sm:w-40"
       />
     </div>
   );

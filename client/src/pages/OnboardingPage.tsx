@@ -19,7 +19,9 @@ export function OnboardingPage() {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Empecemos</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          <span className="text-primary">E</span>mpecemos
+        </h1>
         <p className="text-sm text-muted-foreground">Elige tu carrera o sube tu propio pensum</p>
       </div>
 
@@ -37,7 +39,10 @@ export function OnboardingPage() {
         <Card className="rounded-2xl border-border shadow-sm">
           <CardHeader>
             <CardTitle className="text-lg font-medium">Sube tu pensum</CardTitle>
-            <p className="text-sm text-muted-foreground">Importa tu Excel y empieza desde tu progreso actual</p>
+            <p className="text-sm text-muted-foreground">
+              Importa tu Excel (.xlsx) y empieza desde tu progreso actual. Debe ser ese formato — es el único que
+              garantiza leer bien las tablas del pensum.
+            </p>
           </CardHeader>
           <CardContent>
             <UploadDropzone />

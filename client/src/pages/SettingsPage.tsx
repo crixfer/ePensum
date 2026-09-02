@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pencil, Repeat, Trash2 } from "lucide-react";
+import { ArrowLeft, Pencil, Repeat, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,7 +53,17 @@ export function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
-      <h1 className="text-2xl font-semibold tracking-tight text-foreground">Ajustes</h1>
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          <span className="text-primary">A</span>justes
+        </h1>
+        {pensum && (
+          <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+            <ArrowLeft className="size-4" />
+            Volver a mi pensum
+          </Button>
+        )}
+      </div>
 
       <Card className="rounded-2xl border-border shadow-sm">
         <CardHeader>

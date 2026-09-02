@@ -2,7 +2,6 @@ import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Upload } from "lucide-react";
 import { parsePensumWorkbook } from "@/lib/pensumParser";
-import { parsePensumPdf } from "@/lib/pdfParser";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 
@@ -16,21 +15,23 @@ export function UploadDropzone() {
 
   async function handleFile(file: File) {
     setError(null);
+    const isExcel = /\.(xlsx|xls)$/i.test(file.name);
+    if (!isExcel) {
+      setError("Solo se aceptan archivos Excel (.xlsx o .xls) — es el único formato que garantiza leer bien las tablas del pensum.");
+      return;
+    }
     setIsProcessing(true);
     try {
       const buffer = await file.arrayBuffer();
-      const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
       const universityId = user?.universityId ?? null;
-      const parsed = isPdf
-        ? await parsePensumPdf(buffer, universityId)
-        : { ...parsePensumWorkbook(buffer), universityId };
+      const parsed = { ...parsePensumWorkbook(buffer), universityId };
       if (parsed.quarters.length === 0) {
         setError("No se pudo leer la estructura del pensum en este archivo.");
         return;
       }
       navigate("/onboarding/import-review", { state: { parsed } });
     } catch {
-      setError("No se pudo procesar el archivo. Verifica que sea un Excel (.xlsx) o PDF válido.");
+      setError("No se pudo procesar el archivo. Verifica que sea un Excel (.xlsx) válido.");
     } finally {
       setIsProcessing(false);
     }
@@ -56,7 +57,11 @@ export function UploadDropzone() {
       <Upload className="size-6 text-muted-foreground" />
       <div>
         <p className="text-sm font-medium text-foreground">Arrastra tu pensum aquí</p>
-        <p className="text-xs text-muted-foreground">o haz clic para seleccionar un archivo .xlsx o .pdf</p>
+        <p className="text-xs text-muted-foreground">o haz clic para seleccionar un archivo .xlsx</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Debe ser un archivo Excel — es el único formato compatible para leer correctamente las tablas del
+          pensum.
+        </p>
       </div>
       <Button
         type="button"
@@ -70,7 +75,7 @@ export function UploadDropzone() {
       <input
         ref={inputRef}
         type="file"
-        accept=".xlsx,.xls,.pdf"
+        accept=".xlsx,.xls"
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0];
