@@ -8,6 +8,19 @@ export async function importPensumForUser(userId: string, parsed: PensumImportPa
     throw new HttpError(409, "Ya tienes un pensum activo. Cámbialo o elimínalo desde ajustes antes de importar otro.");
   }
 
+  // Avoid piling up duplicate templates for the same university+career — reuse one that
+  // already exists instead of creating another entry in the pensum list.
+  const duplicate = await prisma.pensumTemplate.findFirst({
+    where: {
+      universityId: parsed.universityId ?? "otra",
+      careerName: { equals: parsed.careerName, mode: "insensitive" },
+    },
+    include: { quarters: { include: { subjects: true } } },
+  });
+  if (duplicate) {
+    return attachToExistingTemplate(userId, duplicate, parsed);
+  }
+
   return prisma.$transaction(async (tx) => {
     const template = await tx.pensumTemplate.create({
       data: {
@@ -59,6 +72,43 @@ export async function importPensumForUser(userId: string, parsed: PensumImportPa
     );
 
     await tx.subjectProgress.createMany({ data: progressData });
+
+    return { templateId: template.id };
+  });
+}
+
+type TemplateWithSubjects = {
+  id: string;
+  quarters: { subjects: { id: string; code: string }[] }[];
+};
+
+/** Attaches the user to an already-existing template instead of creating a duplicate,
+ * carrying over whatever progress the parsed upload matches by subject code. */
+async function attachToExistingTemplate(
+  userId: string,
+  template: TemplateWithSubjects,
+  parsed: PensumImportPayload,
+) {
+  const subjectByCode = new Map(template.quarters.flatMap((q) => q.subjects.map((s) => [s.code, s] as const)));
+  const parsedByCode = new Map(parsed.quarters.flatMap((q) => q.subjects.map((s) => [s.code, s] as const)));
+
+  return prisma.$transaction(async (tx) => {
+    const userPensum = await tx.userPensum.create({ data: { userId, templateId: template.id } });
+
+    const allSubjects = template.quarters.flatMap((q) => q.subjects);
+    await tx.subjectProgress.createMany({
+      data: allSubjects.map((subject) => {
+        const parsedSubject = parsedByCode.get(subject.code);
+        return {
+          userPensumId: userPensum.id,
+          subjectId: subject.id,
+          status: parsedSubject?.status ?? "PENDIENTE",
+          finalScore: parsedSubject?.finalScore ?? null,
+          teacher: parsedSubject?.teacher ?? null,
+          completedDate: parsedSubject?.completedDate ? new Date(parsedSubject.completedDate) : null,
+        };
+      }),
+    });
 
     return { templateId: template.id };
   });
@@ -122,8 +172,11 @@ export async function archiveUserPensum(userId: string) {
 export async function deletePensumTemplate(userId: string, templateId: string) {
   const template = await prisma.pensumTemplate.findUnique({ where: { id: templateId } });
   if (!template) throw new HttpError(404, "Pensum no encontrado");
-  if (template.createdById !== userId) {
-    throw new HttpError(403, "Solo quien subió este pensum puede eliminarlo.");
+
+  const requestingUser = await prisma.user.findUnique({ where: { id: userId } });
+  const isAdmin = requestingUser?.isAdmin ?? false;
+  if (template.createdById !== userId && !isAdmin) {
+    throw new HttpError(403, "Solo quien subió este pensum (o un administrador) puede eliminarlo.");
   }
 
   const inUse = await prisma.userPensum.findFirst({ where: { templateId, active: true } });

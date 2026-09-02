@@ -16,6 +16,7 @@ function serializeUser(user: User) {
     name: user.name,
     matricula: user.matricula,
     universityId: user.universityId,
+    isAdmin: user.isAdmin,
   };
 }
 

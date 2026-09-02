@@ -7,6 +7,7 @@ interface AuthUser {
   name: string;
   matricula: string;
   universityId: string;
+  isAdmin: boolean;
 }
 
 interface SignupInput {

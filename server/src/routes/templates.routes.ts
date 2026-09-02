@@ -21,13 +21,17 @@ templatesRouter.get(
   "/",
   requireAuth,
   asyncHandler(async (req, res) => {
-    const templates = await prisma.pensumTemplate.findMany({
-      include: {
-        quarters: { include: { subjects: true } },
-        userPensums: { where: { active: true }, select: { id: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    const [templates, requestingUser] = await Promise.all([
+      prisma.pensumTemplate.findMany({
+        include: {
+          quarters: { include: { subjects: true } },
+          userPensums: { where: { active: true }, select: { id: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.user.findUnique({ where: { id: req.userId! } }),
+    ]);
+    const isAdmin = requestingUser?.isAdmin ?? false;
 
     res.json(
       templates.map((t) => {
@@ -39,7 +43,7 @@ templatesRouter.get(
           totalCredits: subjects.reduce((sum, s) => sum + s.credits, 0),
           subjectCount: subjects.length,
           createdAt: t.createdAt.toISOString(),
-          canDelete: t.createdById === req.userId && t.userPensums.length === 0,
+          canDelete: (t.createdById === req.userId || isAdmin) && t.userPensums.length === 0,
         };
       }),
     );

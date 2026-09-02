@@ -15,6 +15,7 @@ model User {
   name             String
   matricula        String
   universityId     String
+  isAdmin          Boolean          @default(false)
   createdAt        DateTime         @default(now())
   pensums          UserPensum[]
   createdTemplates PensumTemplate[] @relation("TemplateAuthor")
