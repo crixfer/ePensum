@@ -10,6 +10,15 @@ A small web app for tracking university degree progress ("pensum"): upload your 
 
 ## Setup
 
+Create environment files before running the app:
+
+```bash
+cp client/.env.example client/.env
+cp server/.env.example server/.env
+```
+
+Then install dependencies and run:
+
 ```bash
 npm install
 npm run -w server prisma:migrate   # creates server/prisma/dev.db and applies the schema
@@ -18,6 +27,8 @@ npm run dev                        # runs server (:4000) and client (:5173) toge
 ```
 
 Then open http://localhost:5173, sign up, and either pick an existing career or upload your own pensum Excel file.
+
+For production deployments, set `VITE_API_URL` in the frontend environment to your deployed API origin, and set `CLIENT_ORIGIN` in the backend to your deployed frontend origin.
 
 ## Excel import format
 
