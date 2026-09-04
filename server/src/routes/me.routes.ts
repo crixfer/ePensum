@@ -1,9 +1,10 @@
 import { Router } from "express";
-import { subjectProgressUpdateSchema, updateUniversityNameSchema } from "@epensum/shared";
+import { changePasswordSchema, subjectProgressUpdateSchema, updateAccountSchema, updateUniversityNameSchema } from "@epensum/shared";
 import { prisma } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
 import { asyncHandler, HttpError } from "../middleware/errorHandler.js";
 import { getPensumViewForUser } from "../services/pensumService.js";
+import { hashPassword } from "../lib/password.js";
 import { archiveUserPensum, detachUserPensum, updateActivePensumUniversityName } from "../services/importService.js";
 
 export const meRouter = Router();
@@ -15,6 +16,39 @@ meRouter.get(
   asyncHandler(async (req, res) => {
     const view = await getPensumViewForUser(req.userId!);
     res.json(view);
+  }),
+);
+
+meRouter.patch(
+  "/account",
+  asyncHandler(async (req, res) => {
+    const { email, name, matricula } = updateAccountSchema.parse(req.body);
+    const existingUser = await prisma.user.findFirst({ where: { email, id: { not: req.userId! } } });
+    if (existingUser) throw new HttpError(409, "Ya existe una cuenta con este correo");
+    const user = await prisma.user.update({
+      where: { id: req.userId! },
+      data: { email, name, matricula },
+    });
+    res.json({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      matricula: user.matricula.replace(/[^a-zA-Z0-9]/g, ""),
+      universityId: user.universityId,
+      isAdmin: user.isAdmin,
+    });
+  }),
+);
+
+meRouter.patch(
+  "/password",
+  asyncHandler(async (req, res) => {
+    const { password } = changePasswordSchema.parse(req.body);
+    await prisma.user.update({
+      where: { id: req.userId! },
+      data: { passwordHash: await hashPassword(password) },
+    });
+    res.status(204).end();
   }),
 );
 

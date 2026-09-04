@@ -1,6 +1,6 @@
 import { Router } from "express";
 import type { User } from "@prisma/client";
-import { loginSchema, signupSchema } from "@epensum/shared";
+import { loginSchema, resetPasswordSchema, signupSchema } from "@epensum/shared";
 import { prisma } from "../db.js";
 import { hashPassword, verifyPassword } from "../lib/password.js";
 import { SESSION_COOKIE_NAME, SESSION_COOKIE_OPTIONS, signSession } from "../lib/jwt.js";
@@ -14,7 +14,7 @@ function serializeUser(user: User) {
     id: user.id,
     email: user.email,
     name: user.name,
-    matricula: user.matricula,
+    matricula: user.matricula.replace(/[^a-zA-Z0-9]/g, ""),
     universityId: user.universityId,
     isAdmin: user.isAdmin,
   };
@@ -54,6 +54,16 @@ authRouter.post(
     const token = signSession({ userId: user.id });
     res.cookie(SESSION_COOKIE_NAME, token, SESSION_COOKIE_OPTIONS);
     res.json(serializeUser(user));
+  }),
+);
+
+authRouter.post(
+  "/reset-password",
+  asyncHandler(async (req, res) => {
+    const { email, password } = resetPasswordSchema.parse(req.body);
+    const passwordHash = await hashPassword(password);
+    await prisma.user.updateMany({ where: { email }, data: { passwordHash } });
+    res.status(204).end();
   }),
 );
 

@@ -1,11 +1,11 @@
 import { useState, type FormEvent } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
 import { MATRICULA_PATTERN, UNIVERSITY_PROFILES } from "@epensum/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ApiError } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 
 interface SignupValues {
   email: string;
@@ -20,11 +20,6 @@ interface AuthFormProps {
   onSubmit: (values: { email: string; password: string } | SignupValues) => Promise<void>;
 }
 
-function formatMatricula(raw: string): string {
-  const digits = raw.replace(/\D/g, "").slice(0, 9);
-  return digits.length <= 5 ? digits : `${digits.slice(0, 5)}-${digits.slice(5)}`;
-}
-
 export function AuthForm({ mode, onSubmit }: AuthFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,10 +30,15 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showReset, setShowReset] = useState(false);
+  const [loginFailed, setLoginFailed] = useState(false);
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetMessage, setResetMessage] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setLoginFailed(false);
     setIsSubmitting(true);
     try {
       if (mode === "signup") {
@@ -54,8 +54,25 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
       }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Ocurrió un error inesperado");
+      if (mode === "login" && err instanceof ApiError && err.status === 401) {
+        setLoginFailed(true);
+        setShowReset(true);
+      }
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleResetPassword() {
+    setError(null);
+    setResetMessage(null);
+    try {
+      await api.post("/auth/reset-password", { email, password: resetPassword });
+      setResetPassword("");
+      setShowReset(false);
+      setResetMessage("Si el correo existe, la contraseña fue actualizada. Ya puedes iniciar sesión.");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "No se pudo cambiar la contraseña");
     }
   }
 
@@ -92,37 +109,46 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
             <Label htmlFor="matricula">Matrícula</Label>
             <Input
               id="matricula"
-              placeholder="20263-0001"
+              placeholder="202630001 o ABC123"
               value={matricula}
-              onChange={(e) => setMatricula(formatMatricula(e.target.value))}
+              onChange={(e) => setMatricula(e.target.value.replace(/[^a-zA-Z0-9]/g, ""))}
               pattern={MATRICULA_PATTERN.source}
-              title="Formato: 20263-0001"
+              title="Usa solo letras y números, sin guiones ni espacios"
               required
             />
           </div>
         </>
       )}
       <div className="space-y-1.5">
-        <Label htmlFor="email">Correo</Label>
-        <Input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+        <Label htmlFor="email" className={mode === "login" ? "sr-only" : undefined}>Correo</Label>
+        <div className="relative">
+          {mode === "login" && <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />}
+          <Input
+            id="email"
+            type="email"
+            aria-label={mode === "login" ? "Correo" : undefined}
+            placeholder={mode === "login" ? "Correo" : undefined}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className={mode === "login" ? "pl-10 placeholder:text-muted-foreground/80" : undefined}
+          />
+        </div>
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="password">Contraseña</Label>
+        <Label htmlFor="password" className={mode === "login" ? "sr-only" : undefined}>Contraseña</Label>
         <div className="relative">
+          {mode === "login" && <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />}
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
+            aria-label={mode === "login" ? "Contraseña" : undefined}
+            placeholder={mode === "login" ? "Contraseña" : undefined}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             minLength={8}
             required
-            className="pr-10"
+            className={mode === "login" ? "pl-10 pr-10 placeholder:text-muted-foreground/80" : "pr-10"}
           />
           <button
             type="button"
@@ -136,6 +162,32 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
         </div>
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
+      {resetMessage && <p className="text-sm text-status-completado">{resetMessage}</p>}
+      {showReset && mode === "login" && (
+        <div className="space-y-3 rounded-xl border border-border bg-muted/40 p-3">
+          <p className="text-sm font-medium text-foreground">Establece una contraseña nueva</p>
+          <Input
+            type="password"
+            minLength={8}
+            placeholder="Mínimo 8 caracteres"
+            value={resetPassword}
+            onChange={(e) => setResetPassword(e.target.value)}
+          />
+          <div className="flex items-center gap-2">
+            <Button type="button" size="sm" onClick={handleResetPassword} disabled={resetPassword.length < 8 || !email}>
+              Cambiar contraseña
+            </Button>
+            <Button type="button" size="sm" variant="ghost" onClick={() => setShowReset(false)}>
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      )}
+      {!showReset && mode === "login" && loginFailed && (
+        <button type="button" className="text-sm font-medium text-primary hover:underline" onClick={() => setShowReset(true)}>
+          Olvidé mi contraseña
+        </button>
+      )}
       <Button type="submit" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? "Un momento…" : mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
       </Button>

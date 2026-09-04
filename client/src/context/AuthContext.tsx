@@ -23,6 +23,8 @@ interface AuthContextValue {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (input: SignupInput) => Promise<void>;
+  updateAccount: (input: { email: string; name: string; matricula: string }) => Promise<void>;
+  changePassword: (password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -50,13 +52,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(newUser);
   }
 
+  async function updateAccount(input: { email: string; name: string; matricula: string }) {
+    const updatedUser = await api.patch<AuthUser>("/me/account", input);
+    setUser(updatedUser);
+  }
+
+  async function changePassword(password: string) {
+    await api.patch("/me/password", { password });
+  }
+
   async function logout() {
     await api.post("/auth/logout");
     setUser(null);
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, signup, updateAccount, changePassword, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -13,7 +13,13 @@ const LETTER_STYLES: Record<string, string> = {
   F: "text-destructive",
 };
 
-export function SubjectRow({ subject, extraField }: { subject: SubjectView; extraField: ExtraFieldType }) {
+export function SubjectRow({
+  subject,
+  extraField,
+}: {
+  subject: SubjectView;
+  extraField: ExtraFieldType;
+}) {
   const update = useUpdateSubject();
   const [score, setScore] = useState(subject.finalScore?.toString() ?? "");
   const [teacher, setTeacher] = useState(subject.teacher ?? "");
@@ -41,8 +47,20 @@ export function SubjectRow({ subject, extraField }: { subject: SubjectView; extr
   }
 
   return (
-    <div className="grid grid-cols-1 gap-3 border-b border-border py-3 last:border-b-0 sm:grid-cols-[auto_1fr_auto_auto_auto_auto] sm:items-center sm:gap-4">
-      <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-end gap-2 sm:flex sm:items-center sm:gap-1 sm:order-1">
+    <div
+      className={cn(
+        "grid grid-cols-1 gap-3 border-b border-border py-3 last:border-b-0 sm:items-center sm:gap-4",
+        "sm:grid-cols-[auto_1fr_auto_auto_auto_auto]",
+        extraField === "fecha" && "max-sm:grid-cols-[minmax(0,1fr)_auto]",
+      )}
+    >
+      <div
+        className={cn(
+          "grid grid-cols-[minmax(0,1fr)_auto_auto] items-end gap-2 sm:order-1 sm:flex sm:items-center sm:gap-1",
+          "order-2 sm:order-1",
+          extraField === "fecha" && "max-sm:col-span-1",
+        )}
+      >
         {extraField === "orden" ? (
           <div className="min-w-0 sm:contents">
             <span className="block text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:hidden">N°</span>
@@ -50,7 +68,6 @@ export function SubjectRow({ subject, extraField }: { subject: SubjectView; extr
           </div>
         ) : (
           <div className="min-w-0 sm:contents">
-            <span className="block text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:hidden">Fecha</span>
             <Input
               type="date"
               value={date}
@@ -61,20 +78,26 @@ export function SubjectRow({ subject, extraField }: { subject: SubjectView; extr
           </div>
         )}
 
-        <div className="text-center sm:contents">
+        <div className="text-center max-sm:hidden sm:contents">
           <span className="block text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:hidden">CR</span>
           <span className="text-sm text-muted-foreground sm:w-6 sm:text-center">{subject.credits}</span>
         </div>
 
-        <div className="text-center sm:contents">
+        <div className="text-center max-sm:hidden sm:contents">
           <span className="block text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:hidden">HT</span>
           <span className="text-sm text-muted-foreground sm:w-6 sm:text-center">{subject.totalHours ?? "—"}</span>
         </div>
       </div>
 
-      <p className="text-sm font-medium text-foreground sm:order-2">{subject.name}</p>
+      <p className="order-first text-sm font-semibold text-primary max-sm:col-span-2 sm:order-2">{subject.name}</p>
 
-      <span className="text-xs text-muted-foreground sm:order-3 sm:w-40 sm:text-center">
+      <div className="order-1 col-span-2 flex items-center gap-2 text-xs text-muted-foreground sm:hidden">
+        <span className="font-mono">{subject.code}</span>
+        <span aria-hidden="true">·</span>
+        <span>CR {subject.credits}</span>
+      </div>
+
+      <span className="text-xs text-muted-foreground max-sm:hidden sm:order-3 sm:w-40 sm:text-center">
         <span className="font-mono">{subject.code}</span>
         {subject.prerequisiteCode && (
           <>
@@ -91,7 +114,7 @@ export function SubjectRow({ subject, extraField }: { subject: SubjectView; extr
       >
         <SelectTrigger
           size="sm"
-          className="w-full sm:order-4 sm:w-36"
+          className="order-4 max-sm:col-span-2 w-full sm:order-4 sm:w-36"
           title={
             subject.prerequisiteMet
               ? undefined
@@ -109,7 +132,7 @@ export function SubjectRow({ subject, extraField }: { subject: SubjectView; extr
         </SelectContent>
       </Select>
 
-      <div className="flex items-center gap-2 sm:order-5 sm:w-20">
+      <div className="order-3 flex items-center justify-self-end gap-2 sm:order-5 sm:w-20">
         <Input
           type="number"
           min={0}
@@ -118,7 +141,7 @@ export function SubjectRow({ subject, extraField }: { subject: SubjectView; extr
           value={score}
           onChange={(e) => setScore(e.target.value)}
           onBlur={commitScore}
-          className="w-14"
+          className="no-number-spinner w-14"
         />
         <span
           className={cn(
@@ -135,7 +158,7 @@ export function SubjectRow({ subject, extraField }: { subject: SubjectView; extr
         value={teacher}
         onChange={(e) => setTeacher(e.target.value)}
         onBlur={commitTeacher}
-        className="w-full placeholder:text-muted-foreground/60 sm:order-6 sm:w-40"
+        className="order-5 max-sm:col-span-2 w-full justify-self-end placeholder:text-muted-foreground/60 sm:order-6 sm:w-40"
       />
     </div>
   );

@@ -23,8 +23,13 @@ templatesRouter.get(
   asyncHandler(async (req, res) => {
     const [templates, requestingUser] = await Promise.all([
       prisma.pensumTemplate.findMany({
-        include: {
-          quarters: { include: { subjects: true } },
+        select: {
+          id: true,
+          universityName: true,
+          careerName: true,
+          createdById: true,
+          createdAt: true,
+          quarters: { select: { subjects: { select: { credits: true } } } },
           userPensums: { where: { active: true }, select: { id: true } },
         },
         orderBy: { createdAt: "desc" },

@@ -2,8 +2,8 @@ import { z } from "zod";
 import { SUBJECT_STATUSES } from "./types.js";
 import { UNIVERSITY_PROFILES } from "./universities.js";
 
-/** Student ID format: 5 digits, hyphen, 4 digits — e.g. "20263-0001". */
-export const MATRICULA_PATTERN = /^\d{5}-\d{4}$/;
+/** Student ID: letters and numbers only, without separators. */
+export const MATRICULA_PATTERN = /^[A-Za-z0-9]+$/;
 
 export const universityIdSchema = z.enum(
   UNIVERSITY_PROFILES.map((p) => p.id) as [string, ...string[]],
@@ -52,11 +52,26 @@ export const signupSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   name: z.string().min(1),
-  matricula: z.string().regex(MATRICULA_PATTERN, "Formato esperado: 20263-0001"),
+  matricula: z.string().regex(MATRICULA_PATTERN, "Usa solo letras y números, sin guiones ni espacios"),
   universityId: universityIdSchema,
 });
 
 export const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
+});
+
+export const updateAccountSchema = z.object({
+  email: z.string().trim().email(),
+  name: z.string().trim().min(1),
+  matricula: z.string().trim().regex(MATRICULA_PATTERN, "Usa solo letras y números, sin guiones ni espacios"),
+});
+
+export const changePasswordSchema = z.object({
+  password: z.string().min(8),
+});
+
+export const resetPasswordSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
 });

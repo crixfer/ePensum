@@ -5,7 +5,7 @@
 :root {
   --radius: 1rem;
 
-  --background: oklch(0.985 0.002 90);
+  --background: oklch(0.965 0.004 90);
   --foreground: oklch(0.2 0.01 90);
 
   --card: oklch(1 0 0);
@@ -155,5 +155,15 @@
   body {
     @apply bg-background text-foreground;
     font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  }
+
+  .no-number-spinner::-webkit-inner-spin-button,
+  .no-number-spinner::-webkit-outer-spin-button {
+    appearance: none;
+    margin: 0;
+  }
+
+  .no-number-spinner {
+    appearance: textfield;
   }
 }

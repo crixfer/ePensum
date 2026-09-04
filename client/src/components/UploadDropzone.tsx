@@ -24,7 +24,7 @@ export function UploadDropzone() {
     try {
       const buffer = await file.arrayBuffer();
       const universityId = user?.universityId ?? null;
-      const parsed = { ...parsePensumWorkbook(buffer), universityId };
+      const parsed = { ...(await parsePensumWorkbook(buffer)), universityId };
       if (parsed.quarters.length === 0) {
         setError("No se pudo leer la estructura del pensum en este archivo.");
         return;

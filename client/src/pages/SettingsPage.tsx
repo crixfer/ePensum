@@ -9,7 +9,7 @@ import { ApiError } from "@/lib/api";
 import { useArchivePensum, useDetachPensum, usePensum, useUpdateUniversityName } from "@/hooks/usePensum";
 
 export function SettingsPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, updateAccount, changePassword } = useAuth();
   const { data: pensum } = usePensum();
   const archive = useArchivePensum();
   const detach = useDetachPensum();
@@ -19,6 +19,15 @@ export function SettingsPage() {
   const [editingUniversity, setEditingUniversity] = useState(false);
   const [universityDraft, setUniversityDraft] = useState("");
   const [universityError, setUniversityError] = useState<string | null>(null);
+  const [names, setNames] = useState(() => user?.name.split(" ")[0] ?? "");
+  const [lastNames, setLastNames] = useState(() => user?.name.split(" ").slice(1).join(" ") ?? "");
+  const [email, setEmail] = useState(() => user?.email ?? "");
+  const [matricula, setMatricula] = useState(() => user?.matricula.replace(/[^a-zA-Z0-9]/g, "") ?? "");
+  const [accountError, setAccountError] = useState<string | null>(null);
+  const [accountMessage, setAccountMessage] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
 
   async function handleLogout() {
     await logout();
@@ -51,6 +60,33 @@ export function SettingsPage() {
     }
   }
 
+  async function handleSaveAccount() {
+    setAccountError(null);
+    setAccountMessage(null);
+    try {
+      await updateAccount({
+        email: email.trim(),
+        name: `${names.trim()} ${lastNames.trim()}`.trim(),
+        matricula: matricula.trim(),
+      });
+      setAccountMessage("Datos actualizados");
+    } catch (err) {
+      setAccountError(err instanceof ApiError ? err.message : "No se pudieron actualizar los datos");
+    }
+  }
+
+  async function handleChangePassword() {
+    setPasswordError(null);
+    setPasswordMessage(null);
+    try {
+      await changePassword(newPassword);
+      setNewPassword("");
+      setPasswordMessage("Contraseña actualizada");
+    } catch (err) {
+      setPasswordError(err instanceof ApiError ? err.message : "No se pudo actualizar la contraseña");
+    }
+  }
+
   return (
     <div className="mx-auto max-w-lg space-y-6">
       <div className="flex items-center justify-between gap-4">
@@ -69,14 +105,55 @@ export function SettingsPage() {
         <CardHeader>
           <CardTitle className="text-lg font-medium">Cuenta</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="text-sm">
-            <p className="font-medium text-foreground">{user?.name}</p>
-            <p className="text-muted-foreground">{user?.email}</p>
+        <CardContent className="space-y-5">
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label htmlFor="account-names" className="text-sm font-medium">Nombres</label>
+                <Input id="account-names" value={names} onChange={(e) => setNames(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <label htmlFor="account-last-names" className="text-sm font-medium">Apellidos</label>
+                <Input id="account-last-names" value={lastNames} onChange={(e) => setLastNames(e.target.value)} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="account-matricula" className="text-sm font-medium">Matrícula</label>
+              <Input
+                id="account-matricula"
+                value={matricula}
+                onChange={(e) => setMatricula(e.target.value.replace(/[^a-zA-Z0-9]/g, ""))}
+                pattern="[a-zA-Z0-9]+"
+                title="Usa solo letras y números, sin guiones ni espacios"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="account-email" className="text-sm font-medium">Correo</label>
+              <Input id="account-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            </div>
+            <Button onClick={handleSaveAccount}>Guardar datos</Button>
+            {accountMessage && <p className="text-sm text-status-completado">{accountMessage}</p>}
+            {accountError && <p className="text-sm text-destructive">{accountError}</p>}
           </div>
-          <Button variant="outline" onClick={handleLogout}>
-            Cerrar sesión
-          </Button>
+          <div className="space-y-3 border-t border-border pt-4">
+            <div className="space-y-1.5">
+              <label htmlFor="new-password" className="text-sm font-medium">Nueva contraseña</label>
+              <Input
+                id="new-password"
+                type="password"
+                minLength={8}
+                placeholder="Mínimo 8 caracteres"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+            </div>
+            <Button variant="outline" onClick={handleChangePassword} disabled={newPassword.length < 8}>
+              Cambiar contraseña
+            </Button>
+            {passwordMessage && <p className="text-sm text-status-completado">{passwordMessage}</p>}
+            {passwordError && <p className="text-sm text-destructive">{passwordError}</p>}
+          </div>
+          <Button variant="outline" onClick={handleLogout}>Cerrar sesión</Button>
         </CardContent>
       </Card>
 
