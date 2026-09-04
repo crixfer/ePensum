@@ -46,9 +46,14 @@ export function SummaryPanel({ summary }: { summary: PensumSummary }) {
             approvedPct={summary.subjectsApprovedPct}
           />
           <div className="sm:text-right">
-            <span className="text-4xl font-semibold tracking-tight text-foreground">
-              {summary.weightedIndex !== null ? summary.weightedIndex.toFixed(1) : "00.0"}
-            </span>
+            <div className="flex items-baseline gap-2 sm:justify-end">
+              <span className="text-4xl font-semibold tracking-tight text-foreground">
+                {summary.weightedIndex !== null ? summary.weightedIndex.toFixed(1) : "00.0"}
+              </span>
+              <span className="text-sm font-medium text-muted-foreground" aria-label="Índice sobre cuatro">
+                {summary.weightedIndex !== null ? (summary.weightedIndex / 25).toFixed(1) : "0.0"} / 4.0
+              </span>
+            </div>
             <p className="text-sm text-muted-foreground">Índice académico</p>
           </div>
         </div>

@@ -42,22 +42,34 @@ export function SubjectRow({ subject, extraField }: { subject: SubjectView; extr
 
   return (
     <div className="grid grid-cols-1 gap-3 border-b border-border py-3 last:border-b-0 sm:grid-cols-[auto_1fr_auto_auto_auto_auto] sm:items-center sm:gap-4">
-      <div className="flex items-center gap-3 sm:order-1 sm:gap-1">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-end gap-2 sm:flex sm:items-center sm:gap-1 sm:order-1">
         {extraField === "orden" ? (
-          <span className="text-sm text-muted-foreground sm:w-6">{subject.order}</span>
+          <div className="min-w-0 sm:contents">
+            <span className="block text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:hidden">N°</span>
+            <span className="text-sm text-muted-foreground sm:w-6">{subject.order}</span>
+          </div>
         ) : (
-          <Input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            onBlur={commitDate}
-            className="w-full text-muted-foreground/60 sm:w-36"
-          />
+          <div className="min-w-0 sm:contents">
+            <span className="block text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:hidden">Fecha</span>
+            <Input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              onBlur={commitDate}
+              className="w-full text-muted-foreground/60 sm:w-36"
+            />
+          </div>
         )}
 
-        <span className="text-sm text-muted-foreground sm:w-6 sm:text-center">{subject.credits}</span>
+        <div className="text-center sm:contents">
+          <span className="block text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:hidden">CR</span>
+          <span className="text-sm text-muted-foreground sm:w-6 sm:text-center">{subject.credits}</span>
+        </div>
 
-        <span className="text-sm text-muted-foreground sm:w-6 sm:text-center">{subject.totalHours ?? "—"}</span>
+        <div className="text-center sm:contents">
+          <span className="block text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:hidden">HT</span>
+          <span className="text-sm text-muted-foreground sm:w-6 sm:text-center">{subject.totalHours ?? "—"}</span>
+        </div>
       </div>
 
       <p className="text-sm font-medium text-foreground sm:order-2">{subject.name}</p>
