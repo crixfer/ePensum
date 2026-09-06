@@ -5,7 +5,7 @@ A small web app for tracking university degree progress ("pensum"): upload your 
 ## Stack
 
 - **Frontend**: React + Vite + Tailwind + shadcn/ui, in `client/`
-- **Backend**: Express + Prisma + SQLite, in `server/`
+- **Backend**: Express + Prisma + PostgreSQL, in `server/`
 - **Shared**: types, validation schemas, and grading logic used by both, in `shared/`
 
 ## Setup
@@ -28,7 +28,22 @@ npm run dev                        # runs server (:4000) and client (:5173) toge
 
 Then open http://localhost:5173, sign up, and either pick an existing career or upload your own pensum Excel file.
 
-For production deployments, set `VITE_API_URL` in the frontend environment to your deployed API origin, and set `CLIENT_ORIGIN` in the backend to your deployed frontend origin.
+## Production deployment on Vercel
+
+The repository is configured as one Vercel project. The frontend is served from `client/dist` and the Express API is exposed under `/api` through `api/index.ts`.
+
+Set these Vercel environment variables for Production, Preview, and Development as appropriate:
+
+```bash
+DATABASE_URL="postgresql://...pooler..."
+DIRECT_URL="postgresql://...direct..."
+JWT_SECRET="a-long-random-secret"
+CLIENT_ORIGIN="https://your-app.vercel.app"
+```
+
+Leave `VITE_API_URL` empty in production so the browser calls the API on the same Vercel domain. `npm run vercel-build` builds the shared package, Prisma client, API, frontend, and applies committed Prisma migrations with `prisma migrate deploy`.
+
+Before removing the previous backend deployment, verify `/api/health`, signup, login, logout, password reset, pensum loading, subject updates, and Excel import against the Vercel Preview deployment.
 
 ## Excel import format
 

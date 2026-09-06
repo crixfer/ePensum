@@ -9,6 +9,7 @@
     "vercel-build": "prisma generate && prisma migrate deploy && tsc -p tsconfig.json",
     "start": "npm --prefix ../shared run build && node dist/index.js",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:generate": "prisma generate",
     "prisma:seed": "tsx prisma/seed.ts"
   },
