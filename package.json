@@ -1,6 +1,7 @@
 {
   "name": "epensum",
   "private": true,
+  "type": "module",
   "workspaces": [
     "client",
     "server",
