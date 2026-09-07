@@ -16,9 +16,11 @@ const LETTER_STYLES: Record<string, string> = {
 export function SubjectRow({
   subject,
   extraField,
+  showTotalHours,
 }: {
   subject: SubjectView;
   extraField: ExtraFieldType;
+  showTotalHours: boolean;
 }) {
   const update = useUpdateSubject();
   const [score, setScore] = useState(subject.finalScore?.toString() ?? "");
@@ -49,55 +51,57 @@ export function SubjectRow({
   return (
     <div
       className={cn(
-        "grid grid-cols-1 gap-3 border-b border-border py-3 last:border-b-0 sm:items-center sm:gap-4",
-        "sm:grid-cols-[auto_1fr_auto_auto_auto_auto]",
-        extraField === "fecha" && "max-sm:grid-cols-[minmax(0,1fr)_auto]",
+        "grid grid-cols-1 gap-3 border-b border-border py-3 last:border-b-0 lg:items-center lg:gap-4",
+        "lg:grid-cols-[auto_1fr_auto_auto_auto_auto]",
+        extraField === "fecha" && "max-lg:grid-cols-[minmax(0,1fr)_auto]",
       )}
     >
       <div
         className={cn(
-          "grid grid-cols-[minmax(0,1fr)_auto_auto] items-end gap-2 sm:order-1 sm:flex sm:items-center sm:gap-1",
-          "order-2 sm:order-1",
-          extraField === "fecha" && "max-sm:col-span-1",
+          "grid grid-cols-[minmax(0,1fr)_auto_auto] items-end gap-2 lg:order-1 lg:flex lg:items-center lg:gap-1",
+          "order-2 lg:order-1",
+          extraField === "fecha" && "max-lg:col-span-1",
         )}
       >
         {extraField === "orden" ? (
-          <div className="min-w-0 sm:contents">
-            <span className="block text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:hidden">N°</span>
-            <span className="text-sm text-muted-foreground sm:w-6">{subject.order}</span>
+          <div className="min-w-0 lg:contents">
+            <span className="block text-[10px] font-medium uppercase tracking-wide text-muted-foreground lg:hidden">N°</span>
+            <span className="text-sm text-muted-foreground lg:w-6">{subject.order}</span>
           </div>
         ) : (
-          <div className="min-w-0 sm:contents">
+          <div className="min-w-0 lg:contents">
             <Input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
               onBlur={commitDate}
-              className="w-full text-muted-foreground/60 sm:w-36"
+              className="w-full text-muted-foreground/60 lg:w-36"
             />
           </div>
         )}
 
-        <div className="text-center max-sm:hidden sm:contents">
-          <span className="block text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:hidden">CR</span>
-          <span className="text-sm text-muted-foreground sm:w-6 sm:text-center">{subject.credits}</span>
+        <div className="text-center max-lg:hidden lg:contents">
+          <span className="block text-[10px] font-medium uppercase tracking-wide text-muted-foreground lg:hidden">CR</span>
+          <span className="text-sm text-muted-foreground lg:w-6 lg:text-center">{subject.credits}</span>
         </div>
 
-        <div className="text-center max-sm:hidden sm:contents">
-          <span className="block text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:hidden">HT</span>
-          <span className="text-sm text-muted-foreground sm:w-6 sm:text-center">{subject.totalHours ?? "—"}</span>
-        </div>
+        {showTotalHours && (
+          <div className="text-center max-lg:hidden lg:contents">
+            <span className="block text-[10px] font-medium uppercase tracking-wide text-muted-foreground lg:hidden">HT</span>
+            <span className="text-sm text-muted-foreground lg:w-6 lg:text-center">{subject.totalHours ?? "—"}</span>
+          </div>
+        )}
       </div>
 
-      <p className="order-first text-sm font-semibold text-primary max-sm:col-span-2 sm:order-2">{subject.name}</p>
+      <p className="order-first text-sm font-semibold text-primary max-lg:col-span-2 lg:order-2">{subject.name}</p>
 
-      <div className="order-1 col-span-2 flex items-center gap-2 text-xs text-muted-foreground sm:hidden">
+      <div className="order-1 col-span-2 flex items-center gap-2 text-xs text-muted-foreground lg:hidden">
         <span className="font-mono">{subject.code}</span>
         <span aria-hidden="true">·</span>
         <span>CR {subject.credits}</span>
       </div>
 
-      <span className="text-xs text-muted-foreground max-sm:hidden sm:order-3 sm:w-40 sm:text-center">
+      <span className="text-xs text-muted-foreground max-lg:hidden lg:order-3 lg:w-40 lg:text-center">
         <span className="font-mono">{subject.code}</span>
         {subject.prerequisiteCode && (
           <>
@@ -114,7 +118,7 @@ export function SubjectRow({
       >
         <SelectTrigger
           size="sm"
-          className="order-4 max-sm:col-span-2 w-full sm:order-4 sm:w-36"
+          className="order-4 max-lg:col-span-2 w-full lg:order-4 lg:w-36"
           title={
             subject.prerequisiteMet
               ? undefined
@@ -132,7 +136,7 @@ export function SubjectRow({
         </SelectContent>
       </Select>
 
-      <div className="order-3 flex items-center justify-self-end gap-2 sm:order-5 sm:w-20">
+      <div className="order-3 flex items-center justify-self-end gap-2 lg:order-5 lg:w-20 lg:justify-center lg:justify-self-auto">
         <Input
           type="number"
           min={0}
@@ -141,7 +145,7 @@ export function SubjectRow({
           value={score}
           onChange={(e) => setScore(e.target.value)}
           onBlur={commitScore}
-          className="no-number-spinner w-14"
+          className="no-number-spinner w-14 text-center"
         />
         <span
           className={cn(
@@ -158,7 +162,7 @@ export function SubjectRow({
         value={teacher}
         onChange={(e) => setTeacher(e.target.value)}
         onBlur={commitTeacher}
-        className="order-5 max-sm:col-span-2 w-full justify-self-end placeholder:text-muted-foreground/60 sm:order-6 sm:w-40"
+        className="order-5 max-lg:col-span-2 w-full justify-self-end placeholder:text-muted-foreground/60 lg:order-6 lg:w-40 lg:justify-self-auto"
       />
     </div>
   );

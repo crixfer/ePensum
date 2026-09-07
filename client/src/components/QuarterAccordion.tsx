@@ -34,21 +34,21 @@ function groupQuartersByYear(quarters: QuarterView[]): QuarterView[][] {
 }
 
 /** Column labels aligned to SubjectRow's grid — same template, order, and widths. */
-function SubjectRowHeader({ extraField }: { extraField: ExtraFieldType }) {
+function SubjectRowHeader({ extraField, showTotalHours }: { extraField: ExtraFieldType; showTotalHours: boolean }) {
   return (
-    <div className="hidden border-b border-border pb-2 text-xs font-medium tracking-wide text-primary sm:grid sm:grid-cols-[auto_1fr_auto_auto_auto_auto] sm:items-center sm:gap-4">
-      <div className="sm:order-1 flex items-center sm:gap-1">
-        <span className={extraField === "orden" ? "sm:w-6" : "sm:w-36"}>
+    <div className="hidden border-b border-border pb-2 text-xs font-medium tracking-wide text-primary lg:grid lg:grid-cols-[auto_1fr_auto_auto_auto_auto] lg:items-center lg:gap-4">
+      <div className="lg:order-1 flex items-center lg:gap-1">
+        <span className={extraField === "orden" ? "lg:w-6" : "lg:w-36"}>
           {extraField === "orden" ? "N°" : "Fecha"}
         </span>
-        <span className="sm:w-6 sm:text-center">CR</span>
-        <span className="sm:w-6 sm:text-center">HT</span>
+        <span className="lg:w-6 lg:text-center">CR</span>
+        {showTotalHours && <span className="lg:w-6 lg:text-center">HT</span>}
       </div>
-      <span className="sm:order-2">Asignatura</span>
-      <span className="sm:order-3 sm:w-40 sm:text-center">Clave · Pre</span>
-      <span className="sm:order-4 sm:w-36">Estatus</span>
-      <span className="sm:order-5 sm:w-20">Nota</span>
-      <span className="sm:order-6 sm:w-40">Docente</span>
+      <span className="lg:order-2">Asignatura</span>
+      <span className="lg:order-3 lg:w-40 lg:text-center">Clave · Pre</span>
+      <span className="lg:order-4 lg:w-36">Estatus</span>
+      <span className="lg:order-5 lg:w-20 lg:text-center">Nota</span>
+      <span className="lg:order-6 lg:w-40">Docente</span>
     </div>
   );
 }
@@ -56,9 +56,11 @@ function SubjectRowHeader({ extraField }: { extraField: ExtraFieldType }) {
 export function QuarterAccordion({
   quarters,
   extraField,
+  showTotalHours,
 }: {
   quarters: QuarterView[];
   extraField: ExtraFieldType;
+  showTotalHours: boolean;
 }) {
   const [openQuarters, setOpenQuarters] = useState<string[]>(() => {
     const stored = loadStoredOpenQuarters();
@@ -125,12 +127,13 @@ export function QuarterAccordion({
                     </div>
                   </AccordionTrigger>
                   <AccordionContent>
-                    <SubjectRowHeader extraField={extraField} />
+                    <SubjectRowHeader extraField={extraField} showTotalHours={showTotalHours} />
                     {quarter.subjects.map((subject) => (
                       <SubjectRow
                         key={subject.id}
                         subject={{ ...subject, name: toTitleCase(subject.name) }}
                         extraField={extraField}
+                        showTotalHours={showTotalHours}
                       />
                     ))}
                   </AccordionContent>

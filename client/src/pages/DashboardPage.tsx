@@ -1,4 +1,5 @@
 import { Navigate } from "react-router-dom";
+import { getUniversityProfile } from "@epensum/shared";
 import { usePensum } from "@/hooks/usePensum";
 import { useAuth } from "@/context/AuthContext";
 import { ApiError } from "@/lib/api";
@@ -30,11 +31,12 @@ export function DashboardPage() {
   }
 
   const isPensumCompleted = data.quarters.length > 0 && data.quarters.every((q) => q.status === "COMPLETADO");
+  const hasTotalHours = getUniversityProfile(data.summary.universityId).hasTotalHours;
 
   return (
     <div className="space-y-6">
       <SummaryPanel summary={data.summary} />
-      <QuarterAccordion quarters={data.quarters} extraField={data.summary.extraField} />
+      <QuarterAccordion quarters={data.quarters} extraField={data.summary.extraField} showTotalHours={hasTotalHours} />
       {isPensumCompleted && user && <GraduationCard name={user.name} careerName={data.summary.careerName} />}
     </div>
   );

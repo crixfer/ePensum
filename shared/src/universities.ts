@@ -7,6 +7,8 @@ export interface UniversityProfile {
   shortName: string;
   /** What the source pensum's reference column represents, when there's no completion-date data. */
   extraField: ExtraFieldType;
+  /** Whether this university's pensum tracks total hours (HT) per subject. */
+  hasTotalHours: boolean;
   /** Which PDF layout heuristic to use — see client/src/lib/pdfParser.ts and pdfParserNumbered.ts. */
   parserStrategy: ParserStrategy;
 }
@@ -17,6 +19,7 @@ export const UNIVERSITY_PROFILES: UniversityProfile[] = [
     name: "Universidad del Caribe (UNICARIBE)",
     shortName: "UNICARIBE",
     extraField: "fecha",
+    hasTotalHours: false,
     parserStrategy: "flat",
   },
   {
@@ -24,6 +27,7 @@ export const UNIVERSITY_PROFILES: UniversityProfile[] = [
     name: "Instituto Superior de Formación Docente Salomé Ureña (ISFODOSU)",
     shortName: "ISFODOSU",
     extraField: "orden",
+    hasTotalHours: true,
     parserStrategy: "sequential-numbered",
   },
   {
@@ -31,6 +35,7 @@ export const UNIVERSITY_PROFILES: UniversityProfile[] = [
     name: "Otra universidad",
     shortName: "Otra",
     extraField: "fecha",
+    hasTotalHours: true,
     parserStrategy: "flat",
   },
 ];
