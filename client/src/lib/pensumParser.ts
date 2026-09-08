@@ -309,17 +309,18 @@ export async function parsePensumWorkbook(buffer: ArrayBuffer): Promise<ParsedPe
       headerRowIndex++;
     }
 
-    if (!columns) {
+    const hasHeaderRow = columns !== null;
+    if (!columns && !lastColumns) {
       warnings.push(`No se encontraron las columnas de la tabla para "${quarterName}".`);
       i++;
       continue;
     }
 
-    columns = mergeColumns(columns, lastColumns);
+    columns = mergeColumns(columns ?? {}, lastColumns);
     lastColumns = columns;
 
     const subjects: ParsedSubject[] = [];
-    let j = headerRowIndex + 1;
+    let j = hasHeaderRow ? headerRowIndex + 1 : i + 1;
     let subjectIndex = 0;
     while (j < rows.length && !rowContainsQuarterHeader(rows[j])) {
       const subjectRow = rows[j];
