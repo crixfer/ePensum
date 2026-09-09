@@ -8,7 +8,15 @@ const STYLES: Record<SubjectStatus, string> = {
   PENDIENTE: "bg-status-pendiente-bg text-status-pendiente",
 };
 
-export function StatusBadge({ status, className }: { status: SubjectStatus; className?: string }) {
+export function StatusBadge({
+  status,
+  label,
+  className,
+}: {
+  status: SubjectStatus;
+  label?: string;
+  className?: string;
+}) {
   return (
     <span
       className={cn(
@@ -18,7 +26,7 @@ export function StatusBadge({ status, className }: { status: SubjectStatus; clas
       )}
     >
       <span className="size-1.5 rounded-full bg-current" />
-      {STATUS_LABELS_ES[status]}
+      {label ?? STATUS_LABELS_ES[status]}
     </span>
   );
 }

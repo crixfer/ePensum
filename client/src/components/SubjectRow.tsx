@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { SUBJECT_STATUSES, STATUS_LABELS_ES, type ExtraFieldType, type SubjectView } from "@epensum/shared";
+import { SUBJECT_STATUSES, STATUS_LABELS_ES, type ExtraFieldType, type SubjectStatus, type SubjectView } from "@epensum/shared";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useUpdateSubject } from "@/hooks/usePensum";
@@ -11,6 +11,13 @@ const LETTER_STYLES: Record<string, string> = {
   C: "text-status-en-curso",
   D: "text-status-en-curso",
   F: "text-destructive",
+};
+
+const STATUS_OPTION_STYLES: Record<SubjectStatus, string> = {
+  PENDIENTE: "",
+  INSCRITA: "text-dropdown-inscrita",
+  EN_CURSO: "text-dropdown-en-curso",
+  COMPLETADO: "text-dropdown-completado",
 };
 
 export function SubjectRow({
@@ -118,7 +125,10 @@ export function SubjectRow({
       >
         <SelectTrigger
           size="sm"
-          className="order-4 max-lg:col-span-2 w-full lg:order-4 lg:w-36"
+          className={cn(
+            "order-4 max-lg:col-span-2 w-full lg:order-4 lg:w-36",
+            STATUS_OPTION_STYLES[subject.status],
+          )}
           title={
             subject.prerequisiteMet
               ? undefined
@@ -129,7 +139,7 @@ export function SubjectRow({
         </SelectTrigger>
         <SelectContent>
           {SUBJECT_STATUSES.map((status) => (
-            <SelectItem key={status} value={status}>
+            <SelectItem key={status} value={status} className={STATUS_OPTION_STYLES[status]}>
               {STATUS_LABELS_ES[status]}
             </SelectItem>
           ))}

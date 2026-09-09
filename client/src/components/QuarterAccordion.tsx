@@ -36,7 +36,7 @@ function groupQuartersByYear(quarters: QuarterView[]): QuarterView[][] {
 /** Column labels aligned to SubjectRow's grid — same template, order, and widths. */
 function SubjectRowHeader({ extraField, showTotalHours }: { extraField: ExtraFieldType; showTotalHours: boolean }) {
   return (
-    <div className="hidden border-b border-border pb-2 text-xs font-medium tracking-wide text-primary lg:grid lg:grid-cols-[auto_1fr_auto_auto_auto_auto] lg:items-center lg:gap-4">
+    <div className="hidden border-b border-border pb-2 text-xs font-bold tracking-wide text-black lg:grid lg:grid-cols-[auto_1fr_auto_auto_auto_auto] lg:items-center lg:gap-4">
       <div className="lg:order-1 flex items-center lg:gap-1">
         <span className={extraField === "orden" ? "lg:w-6" : "lg:w-36"}>
           {extraField === "orden" ? "N°" : "Fecha"}
@@ -47,7 +47,10 @@ function SubjectRowHeader({ extraField, showTotalHours }: { extraField: ExtraFie
       <span className="lg:order-2">Asignatura</span>
       <span className="lg:order-3 lg:w-40 lg:text-center">Clave · Pre</span>
       <span className="lg:order-4 lg:w-36">Estatus</span>
-      <span className="lg:order-5 lg:w-20 lg:text-center">Nota</span>
+      <span className="lg:order-5 lg:flex lg:w-20 lg:items-center lg:justify-center lg:gap-2">
+        <span className="lg:w-14 lg:text-center">Nota</span>
+        <span className="lg:w-4" aria-hidden="true" />
+      </span>
       <span className="lg:order-6 lg:w-40">Docente</span>
     </div>
   );
@@ -122,7 +125,10 @@ export function QuarterAccordion({
                         <span className="text-xs text-muted-foreground">
                           {completed}/{quarter.subjects.length} completadas
                         </span>
-                        <StatusBadge status={quarter.status} />
+                        <StatusBadge
+                          status={quarter.status}
+                          label={quarter.status === "EN_CURSO" ? "En progreso" : undefined}
+                        />
                       </div>
                     </div>
                   </AccordionTrigger>

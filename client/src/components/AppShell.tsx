@@ -1,9 +1,11 @@
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Settings } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { Logo } from "@/components/Logo";
 import { Footer } from "@/components/Footer";
 import emblem from "@/assets/epensum-emblem.png";
+import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -16,6 +18,14 @@ import {
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [showSettingsIcon, setShowSettingsIcon] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setShowSettingsIcon((prev) => !prev);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   async function handleLogout() {
     await logout();
@@ -44,10 +54,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <p className="text-xs text-muted-foreground">{user.matricula}</p>
               </div>
               <DropdownMenu>
-                <DropdownMenuTrigger className="outline-none">
-                  <Avatar className="size-8">
-                    <AvatarFallback className="bg-secondary text-secondary-foreground text-xs">
-                      {initials}
+                <DropdownMenuTrigger className="rounded-full outline-none">
+                  <Avatar className="size-8 animate-border-pulse rounded-full ring-2 ring-blue-500">
+                    <AvatarFallback className="relative overflow-hidden bg-secondary text-secondary-foreground text-xs">
+                      <span
+                        className={cn(
+                          "absolute inset-0 flex items-center justify-center transition-all duration-[1500ms] ease-in-out",
+                          showSettingsIcon ? "scale-75 opacity-0" : "scale-100 opacity-100"
+                        )}
+                      >
+                        {initials}
+                      </span>
+                      <span
+                        className={cn(
+                          "absolute inset-0 flex items-center justify-center transition-all duration-[1500ms] ease-in-out",
+                          showSettingsIcon ? "scale-100 opacity-100" : "scale-75 opacity-0"
+                        )}
+                      >
+                        <Settings className="size-4" />
+                      </span>
                     </AvatarFallback>
                   </Avatar>
                 </DropdownMenuTrigger>

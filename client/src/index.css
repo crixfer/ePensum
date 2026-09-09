@@ -45,6 +45,11 @@
 
   --honor: oklch(0.68 0.14 75);
   --honor-bg: oklch(0.96 0.05 85);
+
+  /* Dropdown status label colors — distinct from the badge palette above, tuned for legibility on the popover background */
+  --dropdown-completado: oklch(0.55 0.14 150);
+  --dropdown-en-curso: oklch(0.62 0.19 55);
+  --dropdown-inscrita: oklch(0.53 0.18 310);
 }
 
 .dark {
@@ -87,6 +92,10 @@
 
   --honor: oklch(0.78 0.13 75);
   --honor-bg: oklch(0.3 0.05 85);
+
+  --dropdown-completado: oklch(0.75 0.14 150);
+  --dropdown-en-curso: oklch(0.75 0.17 55);
+  --dropdown-inscrita: oklch(0.75 0.15 310);
 }
 
 @theme inline {
@@ -121,6 +130,10 @@
   --color-honor: var(--honor);
   --color-honor-bg: var(--honor-bg);
 
+  --color-dropdown-completado: var(--dropdown-completado);
+  --color-dropdown-en-curso: var(--dropdown-en-curso);
+  --color-dropdown-inscrita: var(--dropdown-inscrita);
+
   --radius-sm: calc(var(--radius) - 0.5rem);
   --radius-md: calc(var(--radius) - 0.25rem);
   --radius-lg: var(--radius);
@@ -128,6 +141,7 @@
 
   --animate-accordion-down: accordion-down 0.25s ease-out;
   --animate-accordion-up: accordion-up 0.25s ease-out;
+  --animate-border-pulse: border-pulse 2s ease-in-out infinite;
 }
 
 @keyframes accordion-down {
@@ -145,6 +159,20 @@
   }
   to {
     height: 0;
+  }
+}
+
+@keyframes border-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px oklch(0.6 0.19 265 / 0.7),
+      0 0 0 4px oklch(0.6 0.19 265 / 0.15);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px oklch(0.6 0.19 265 / 0.9),
+      0 0 8px 4px oklch(0.6 0.19 265 / 0.4);
   }
 }
 
